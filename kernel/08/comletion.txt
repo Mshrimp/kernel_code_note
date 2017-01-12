@@ -1,0 +1,37 @@
+
+#include <linux/completion.h>
+
+struct completion {
+	unsigned int done;
+	wait_queue_head_t wait;
+}
+
+定义:
+	struct completion com;
+
+初始化:
+	init_completion(&com);
+	done的初始值为0
+
+定义并初始化:
+	DECLARE_COMPLETION(com);
+	done的初始值为0
+
+等待完成量:
+	void wait_for_completion(struct completion *com);
+	int wait_for_completion_interruptible(struct completion *com);
+	返回-ERESTARTSYS表示被信号唤醒, 0 completion
+
+	if(done的值不等于0)
+		将done减1后立即返回
+	else
+		进入睡眠
+
+唤醒完成量:
+	void complete(struct completion *com);
+	将done的值加1, 然后唤醒第一个等待该完成量的进程
+	
+	void complete_all(struct completion *com);
+	将done的值设为最大, 然后唤醒所有等待该完成量的进程
+
+	

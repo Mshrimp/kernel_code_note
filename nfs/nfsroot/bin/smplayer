@@ -1,0 +1,9 @@
+#!/bin/sh
+
+. setqt4env
+
+export HOME=/root/Documents/test-videos
+/bin/smplayer-bin -qws
+
+hotplug
+

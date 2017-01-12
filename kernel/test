@@ -1,0 +1,218 @@
+linux-3.5
+	make exynos4_defconfig
+
+	make menuconfig
+
+	arm-linux-
+	make -j4
+		error
+			make menuconfig
+				/sousuo
+				vim .config		搜索
+	
+		zImage
+		fastboot
+	
+	exynos4_defconfig
+		tiny4412_linux_defconfig	自己看着调
+	
+	arch/arm/configs/exynos4_defconf	68行
+	make menu
+	Kconfig
+
+
+	rm .config -rf
+	make exynos4_defconf	->	.config
+	mv .config	
+	cp arm/.../exynos4 .config		68
+	make menuconfig		改	
+	mach-smdk4x12.c -> mach-tiny4412.c
+	
+	
+	cd driver/video/s2c-fb.c	屏
+
+	ft5x02.c	触摸屏
+
+	Makefile
+
+	Kconfig
+		config
+	
+
+模块
+	静态符号表
+		
+	
+	rmmod		Not found
+		make -C $()
+
+		depmod
+		modprobe func		->	insmod
+		modprobe -r func	->	rmmod
+
+	入口 出口(如：main()  exit())
+		init_module()
+		cleanup_module()
+		
+设置代码启动运行
+	init_call()
+
+	__initcall()
+	__exitcall()
+
+内核代码的可移植性
+	module_init();
+	__initcall()	新版本内核2.4之后使用
+	init_call()		老版本内核使用
+		
+		可以用module_init()代替调用
+
+	模块调用模块，模块必须先插入
+	内核调用模块，必须模块插入后
+
+设备号
+	主设备号	类别
+	次设备号	区别是设备中的第几个
+
+	major		minor
+	12bit		20bit
+	4K			1M
+
+
+cat /proc/devices
+	查看设备号
+
+
+
+将模块插入到PC的内核代码中：
+	KERNEL_SRC := /lib/modules/`uname -r`/build/
+
+/proc/kmsg
+	查看内核打印信息
+
+	在板子上可以查看开机打印信息，打开读一次后自动清除
+
+给模块传参：
+	static int val;
+	module_param(val, int, 0);
+	static int major;
+	module_param(major, int, 0);
+
+	注册设备，生成主设备号：
+		register_chrdev();
+			major,	*name,		*fops
+			0:动态	DEV_NAME	
+			!0:指定
+	
+	撤销设备，注销设备号：
+		unregister_chrdev();
+
+	指定操作集
+		struct file_operations fops;
+
+	实现操作函数：
+		(*open)
+		(*release)
+		(*unlocked_ioctl)
+
+ioctl  -->  libc  -->  swi #?  -->  sys_ioctl
+
+cdev
+	struct cdev *cdev;
+	struct dev_t devno;
+	if (major != 0)		//静态申请
+	{
+		devno = MKDEV(major, minor);
+		//1. 申请设备号，申请成功返回0;
+		register_chrdev_region();
+			from	起始设备号
+				MKDEV(major, minor)
+			count	设备号个数
+			*name	DEV_NAME
+	}
+	else	//动态申请
+	{
+		ret = alloc_chrdev_region(&devno, minor, count, DEV_NAME);	
+	}
+	
+	//2. 创建空的struct cdev,失败返回NULL;
+	cdev = cdev_alloc();
+		//失败需要释放设备号，无返回值
+		unregister_chrdev_region();
+	
+	//3. 初始化cdev,先清空再初始化;
+	cdev_init(cdev, &fops);
+	cdev->owner = THIS_MODULE;
+
+	//4. 将模块加入到系统中，成功返回0;
+	cdev_add(cdev, devno, count);
+	//失败
+	cdev_del(cdev);
+
+
+
+	register_chrdev();
+	unregister_chrdev();
+
+
+内核错误处理：
+	1) goto:
+		统一地址错误处理；
+	2) 
+		正确返回错误号
+			EINVAL
+			ENOMEM
+			EBUSY
+		cdev == NULL  <==>  IS_ERR_OR_NULL(cdev);
+
+	3) 错误判断宏：
+		#define MAX_ERRNO	4095
+		内核中的错误号：0 ~ 4095
+			(? < 0) && (? > -4095)	错误号范围
+			0xFFFFF000 ~ 0xFFFFFFFF	该地址保留，保存错误号
+		
+		IS_ERR_VALUE();
+		IS_ERR();
+		IS_ERR_OR_NULL();
+		ERR_PTR();	//错误号转换成指针
+		PTR_ERR();	//指针转换成错误号
+
+		linux-3.5/include/asm-generic/errno-base.h
+			
+
+	linux3.4	linux3.0
+		kernel -> init  ->  inittab
+
+
+进程栈
+	用户空间栈	sp_user
+		10M/6M
+			x86		10M
+			ARM		6M
+	内核空间栈	sp_svc
+		8K
+
+
+led
+bell
+misc class
+bus
+bus device driver
+platform device driver
+head.S main.c -> mach_tiny4412.c
+
+ts
+lcd
+pwm
+ir
+sw
+		framebuffer
+		input
+v4l2	摄像头采集数据
+tty
+i2c
+
+
+linux-3.5	download
+	www.kernel.org
+

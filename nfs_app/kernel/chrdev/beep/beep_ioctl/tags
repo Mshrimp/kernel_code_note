@@ -1,0 +1,55 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.6	//
+BEEP	./test.c	34;"	d	file:
+BEEP_OFF	./ioctl_beep.h	5;"	d
+BEEP_ON	./ioctl_beep.h	4;"	d
+DEV_BEEP_NAME	./test.c	10;"	d	file:
+DEV_LED_NAME	./test.c	9;"	d	file:
+KERNEL_DIR	./Makefile	/^KERNEL_DIR := \/home\/xiami\/note\/FriendlyARM\/Linux\/linux-3.5$/;"	m
+LED1	./test.c	30;"	d	file:
+LED2	./test.c	31;"	d	file:
+LED3	./test.c	32;"	d	file:
+LED4	./test.c	33;"	d	file:
+LED_ALL_OFF	./ioctl_led.h	5;"	d
+LED_ALL_ON	./ioctl_led.h	4;"	d
+ROOTFS	./Makefile	/^ROOTFS	:= \/nfsroot_mini$/;"	m
+__IOCTL_BEEP_H__	./ioctl_beep.h	2;"	d
+__IOCTL_LED_H__	./ioctl_led.h	2;"	d
+__this_module	./test.mod.c	/^struct module __this_module$/;"	v	typeref:struct:module
+__used	./test.mod.c	/^__used$/;"	v	file:
+beep_init	./test.c	/^void beep_init(struct beep_test_dev *tdev)$/;"	f
+beep_off	./test.c	/^void beep_off(struct beep_test_dev *tdev)$/;"	f
+beep_on	./test.c	/^void beep_on(struct beep_test_dev *tdev)$/;"	f
+beep_test_dev	./test.c	/^struct beep_test_dev$/;"	s	file:
+beep_test_exit	./test.c	/^module_exit(beep_test_exit);$/;"	v
+beep_test_exit	./test.c	/^void beep_test_exit(void)$/;"	f
+beep_test_init	./test.c	/^int beep_test_init(void)$/;"	f
+beep_test_init	./test.c	/^module_init(beep_test_init);$/;"	v
+beep_test_ioctl	./test.c	/^long beep_test_ioctl(struct file *filp, unsigned int cmd, unsigned long args)$/;"	f
+beep_test_open	./test.c	/^int beep_test_open(struct inode *inode, struct file *filp)$/;"	f
+beep_test_release	./test.c	/^int beep_test_release(struct inode *inode, struct file *filp)$/;"	f
+beep_uninit	./test.c	/^void beep_uninit(struct beep_test_dev *tdev)$/;"	f
+fops	./test.c	/^	struct file_operations fops;	$/;"	m	struct:led_test_dev	typeref:struct:led_test_dev::file_operations	file:
+fops	./test.c	/^	struct file_operations fops;$/;"	m	struct:beep_test_dev	typeref:struct:beep_test_dev::file_operations	file:
+gpio	./test.c	/^	unsigned int gpio;$/;"	m	struct:beep_test_dev	file:
+gpio	./test.c	/^	unsigned int gpio[4];$/;"	m	struct:led_test_dev	file:
+led_all_off	./test.c	/^void led_all_off(struct led_test_dev *tdev)$/;"	f
+led_all_on	./test.c	/^void led_all_on(struct led_test_dev *tdev)$/;"	f
+led_init	./test.c	/^void led_init(struct led_test_dev *tdev)$/;"	f
+led_tdev	./test.c	/^struct led_test_dev led_tdev = {$/;"	v	typeref:struct:led_test_dev
+led_test_dev	./test.c	/^struct led_test_dev$/;"	s	file:
+led_test_exit	./test.c	/^void led_test_exit(void)$/;"	f
+led_test_init	./test.c	/^int led_test_init(void)$/;"	f
+led_test_ioctl	./test.c	/^long led_test_ioctl (struct file *filp, unsigned int cmd, unsigned long args)$/;"	f
+led_test_open	./test.c	/^int led_test_open (struct inode *inode, struct file *filp)$/;"	f
+led_test_release	./test.c	/^int led_test_release (struct inode *inode, struct file *filp)$/;"	f
+led_uninit	./test.c	/^void led_uninit(struct led_test_dev *tdev)$/;"	f
+main	./app.c	/^int main(int argc, char ** argv)$/;"	f
+main	./bak_app.c	/^int main(int argc, char ** argv)$/;"	f
+major	./test.c	/^	int major;$/;"	m	struct:beep_test_dev	file:
+major	./test.c	/^	int major;$/;"	m	struct:led_test_dev	file:
+tdev	./test.c	/^struct beep_test_dev tdev = {$/;"	v	typeref:struct:beep_test_dev

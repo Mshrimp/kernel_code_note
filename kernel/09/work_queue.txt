@@ -1,0 +1,37 @@
+
+定义:
+	struct work_struct work;
+
+初始化:
+	INIT_WORK(struct work_struct *work, void (*func)(struct work_struct *work));
+
+定义并初始化:
+	DECLARE_WORK(name, void (*func)(struct work_struct *work));
+
+===========================================================
+
+调度:
+	int schedule_work(struct work_struct *work);
+	返回1成功, 0已经添加在队列上
+
+延迟调度:
+	int schedule_delayed_work(struct work_struct *work, unsigned long delay);
+
+===========================================================
+
+创建新队列和新工作者线程:
+	struct workqueue_struct *create_workqueue(const char *name);
+
+调度指定队列:
+	int queue_work(struct workqueue_struct *wq, struct work_struct *work);
+
+延迟调度指定队列:
+	int queue_delayed_work(struct workqueue_struct *wq, 
+			struct work_struct *work, unsigned long delay);
+销毁队列:
+	void destroy_workqueue(struct workqueue_struct *wq);
+
+
+
+
+

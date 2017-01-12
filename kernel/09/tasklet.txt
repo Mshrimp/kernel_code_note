@@ -1,0 +1,27 @@
+
+
+定义:
+	struct tasklet_struct t;
+
+初始化:
+	void tasklet_init(struct tasklet_struct *t, 
+			void (*func)(unsigned long),unsigned long data);
+
+定义并初始化:
+	DECLARE_TASKLET(t, void (*func)(unsigned long),unsigned long data);
+
+
+调度Tasklet:
+	void tasklet_schedule(struct tasklet_struct *t);
+
+	void tasklet_hi_schedule(struct tasklet_struct *t);
+	高优先级
+
+	同一个Tasklet不会同时被多个CPU执行
+
+禁止Tasklet:
+	void tasklet_disable(struct tasklet_struct *t);
+	
+开启Tasklet:
+	void tasklet_enable(struct tasklet_struct *t);
+

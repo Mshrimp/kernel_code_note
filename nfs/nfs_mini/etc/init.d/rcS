@@ -1,0 +1,14 @@
+#!/bin/sh
+
+/bin/mount -t proc none /proc
+/bin/mount -t sysfs none /sys
+/bin/mount -t tmpfs none /dev
+/bin/mount -t tmpfs none /tmp
+
+/sbin/mdev -s
+
+echo /sbin/mdev > /proc/sys/kernelhotplug
+
+
+
+

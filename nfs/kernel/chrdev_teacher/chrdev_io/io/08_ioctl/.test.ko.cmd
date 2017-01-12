@@ -1,0 +1,1 @@
+cmd_/nfsroot/kernel/chrdev/08_ioctl/test.ko := arm-linux-ld -EL -r  -T /share/arm/FriendlyARM-4412-201506/FriendlyARM-4412-DVD-A/Linux/linux-3.5/scripts/module-common.lds --build-id  -o /nfsroot/kernel/chrdev/08_ioctl/test.ko /nfsroot/kernel/chrdev/08_ioctl/test.o /nfsroot/kernel/chrdev/08_ioctl/test.mod.o

@@ -1,0 +1,11 @@
+
+mainmenu "xuwei test kernel configure"
+
+config	MODULES
+	bool
+	default	y
+
+source	"code/Kconfig"
+
+
+

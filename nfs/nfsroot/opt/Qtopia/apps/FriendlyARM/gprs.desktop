@@ -1,0 +1,10 @@
+[Translation]
+File=QtopiaSettings
+Context=gprs
+Comment[Desktop Entry/Name]=Use soft hyphen (char U00AD) to indicate hyphenation
+[Desktop Entry]
+Exec=gprs
+Icon=gprs
+Type=Application
+Name[]=GPRS拨号上网
+CanFastload=0

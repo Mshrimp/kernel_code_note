@@ -1,0 +1,32 @@
+
+#include <linux/timer.h>
+
+
+定义:
+	struct timer_list timer;
+
+初始化:
+	void setup_timer(struct timer_list *timer, 
+		void (*function)(unsigned long data), unsigned long data);
+	function:
+		超时处理函数
+	data:
+		超时时将data传递给处理函数
+
+定义并初始化:
+	void DEFINE_TIMER(name, void (*function)(unsigned long data),
+		       unsigned long expires, unsigned long data);
+
+添加定时器:
+	void add_timer(struct timer_list *timer);
+
+修改定时器节拍数:
+	int mod_timer(struct timer_list *timer, unsigned long expires);
+	expires:
+		超时节拍数
+	返回值0表示timer未添加并自动添加, 1已添加, 不管0或1都成功修改
+	
+删除定时器:
+	int del_timer(struct timer_list * timer);
+	返回值0表示timer未添加(不需要删除), 1成功删除
+

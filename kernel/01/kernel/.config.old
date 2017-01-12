@@ -1,0 +1,19 @@
+#
+# Automatically generated file; DO NOT EDIT.
+# xuwei test kernel configure
+#
+CONFIG_MODULES=y
+CONFIG_TEST_FUNC=y
+CONFIG_TEST_FOO=y
+# CONFIG_TEST_AAA is not set
+CONFIG_ARCH_FUNC=y
+CONFIG_ARCH_EXYNOS=y
+# CONFIG_ARCH_TI is not set
+# CONFIG_ARCH_X86 is not set
+# CONFIG_ARCH_ARM is not set
+CONFIG_VALA=m
+CONFIG_TEST_A=100
+CONFIG_TEST_B=234
+CONFIG_TEST_C=200
+CONFIG_TEST_ENTRY=0x8000
+CONFIG_TEST_CMDLINE="root=/dev/nfs rw nfsroot=192.168.1.254:/nfsroot "

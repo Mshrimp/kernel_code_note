@@ -1,0 +1,2197 @@
+
+. bootloader和kernel:
+	bootloader
+	kernel 
+
+. 什么是kernel??
+	管理计算机的硬件和软件资源, 提供接口给用户访问;
+
+. linux框架
+	文件系统管理
+	设备驱动管理
+	进程管理
+	内存管理
+	网络协议栈
+
+. linux版本信息:
+	http://kernel.org/
+
+	linux-3.5
+		  ^	^
+	3.5.0-FriendlyARM
+	2.6.18-194.el5PAE
+	^ 
+	主版本号
+	  ^
+	  次版本号	(偶数是稳定版本)
+		^
+		扩展版本号
+		  ^
+		  发行版本号
+			
+	linux-3.X.tar.gz
+	patch-3.x.gz		补丁;
+
+. 补丁使用
+	gzip -cd ../patch-3.x.gz | patch -p1
+
+	diff -Nur xxx1/ xxx2/ > patch-xxx2
+
+	linux-2.6
+	patch-2.7
+
+	linux-2.6.27
+	patch-2.6.28
+
+. linux源码目录结构: 
+	.
+	|-- COPYING				
+	|-- CREDITS				
+	|-- Documentation		帮助文档
+		00-INDEX
+		arm/	
+			Booting
+			Interrupts
+			Setup
+			memory.txt
+		fb/					framebuffer
+			...
+		zh_CN/				中文帮助
+			CodingStyle
+			...
+
+	|-- Kbuild				编译使用
+	|-- Kconfig				编译使用
+	|-- MAINTAINERS			kernel changes
+	|-- Makefile			编译
+	|-- Module.symvers		...
+	|-- README				
+	|-- REPORTING-BUGS
+	|-- System.map			静态符号表文件
+	|-- arch				架构相关代码
+		arm/
+			boot/	
+				Image		没压缩的内核
+				zImage		压缩后的内核
+				compressed/	
+					head.S	zImage启动代码
+			kernel/
+				head.S		Image启动代码
+					stext	内核入口函数
+			mach-exynos/	soc 代码
+				mach-tiny4412.c	板子相关代码
+
+	|-- block				块设备调度算法
+			
+	|-- crypto				加密压缩算法
+		md4.c
+		md5.c
+		crc32c.c
+		compress.c
+
+	|-- drivers				驱动代码内核中代码最多的目录
+		char/
+			tiny4412_adc.c
+			tiny4412_backlight.c
+			tiny4412_buttons.c
+			tiny4412_hello_module.c
+			tiny4412_leds.c
+			tiny4412_pwm.c
+		input/
+			keyboard/
+			mouse/
+			joystick/
+			touchscreen/
+				tiny4412_1wire_host.c
+				ft5x06_ts.c
+		hwmon/
+			mma7660.c
+		video/
+			s3c-fb.c
+		i2c/
+		block/
+		bluetooth/
+							
+	|-- firmware			固件代码不开源.S
+		firmware/	
+
+	|-- fs					文件系统支持
+		ext2
+		ext3
+		ext4
+		fat 
+		nfs
+		ntfs
+		cramfs
+		yaffs2
+
+	|-- include				头文件;
+		include/linux
+
+	|-- init									
+		main.c				第一个c 代码
+			start_kernel	第一个c 函数
+
+	|-- ipc					进程间通讯
+		msg.c
+		sem.c
+		shm.c
+
+	|-- kernel				内核核心代码, 进程管理
+		fork.c
+		exit.c
+		wait.c
+		workqueue.c
+		signal.c
+		ksysfs.c
+		cpu.c
+		sched/
+
+	|-- lib					内核库代码			
+		vsprintf.c			
+		llist.c
+		decompress.c
+		crc8.c
+		kobject.c
+		string.c
+
+	|-- mm					内存管理
+		page_alloc.c
+		mmap.c
+		memory.c
+		vmalloc.c
+		ksm.c
+		slub.c
+
+	|-- modules.builtin		编译
+	|-- modules.order		...
+
+	|-- net					网络协议栈
+		ipv4/
+		ipv6/
+		8021q/
+		bluetooth/
+		nfc/
+
+	|-- samples				实例	
+
+	|-- scripts				编译相关脚本
+		Makefile.build
+		Makefile.clean
+		Makefile.lib
+		Makefile.*
+
+	|-- security			安全子系统
+		selinux/
+
+	|-- sound				声音相关代码
+		....
+
+	|-- tags				
+	|-- tiny4412_android_defconfig		默认配置文件
+	|-- tiny4412_linux_defconfig		...
+	|-- tiny4412_ubuntu_defconfig		...
+	|-- tools				工具
+
+	|-- usr					用户相关代码
+		initramfs_data.cpio	根文件系统
+
+	|-- virt				虚拟化实现
+
+	|-- vmlinux				有elf头内核文件
+	`-- vmlinux.o			链接前内核目标文件
+
+	21 directories, 18 files
+
+. 内核代码编译
+	1)配置;
+		1.那些文件需要编译;				obj-y
+		2.那些文件中那些部分需要编译;	#ifdef	#endif
+
+	make menuconfig
+		生成.config
+
+	make 
+	scripts/kconfig/conf --silentoldconfig Kconfig
+		生成:
+			include/generated/autoconf.h
+			include/config/auto.conf
+
+	. 内核makefile结构:	
+	The Makefiles have five parts:
+
+		Makefile        the top Makefile.
+		.config         the kernel configuration file.
+		arch/$(ARCH)/Makefile   the arch Makefile.
+		scripts/Makefile.*  common rules etc. for all kbuild Makefiles.
+		kbuild Makefiles    there are about 500 of these.
+
+	Makefile        the top Makefile.
+	Makefile:
+		all: vmlinux
+
+	vmlinux: scripts/link-vmlinux.sh $(vmlinux-deps) FORCE
+	ifdef CONFIG_HEADERS_CHECK
+		$(Q)$(MAKE) -f $(srctree)/Makefile headers_check
+	endif
+	ifdef CONFIG_SAMPLES
+		$(Q)$(MAKE) $(build)=samples
+	endif
+	ifdef CONFIG_BUILD_DOCSRC
+		$(Q)$(MAKE) $(build)=Documentation
+	endif
+		+$(call if_changed,link-vmlinux)
+	
+	vmlinux-deps := $(KBUILD_LDS) $(KBUILD_VMLINUX_INIT) $(KBUILD_VMLINUX_MAIN)
+
+	export KBUILD_VMLINUX_INIT := $(head-y) $(init-y)
+	export KBUILD_VMLINUX_MAIN := $(core-y) $(libs-y) $(drivers-y) $(net-y)
+	export KBUILD_LDS          := arch/$(SRCARCH)/kernel/vmlinux.lds
+	
+	
+	arch/$(ARCH)/Makefile   the arch Makefile.
+		head-y      := arch/arm/kernel/head$(MMUEXT).o
+	
+		core-y      += arch/arm/kernel/ arch/arm/mm/ arch/arm/common/
+		core-y      += arch/arm/net/
+		core-y      += $(machdirs) $(platdirs)
+		drivers-$(CONFIG_OPROFILE)      += arch/arm/oprofile/
+		libs-y              := arch/arm/lib/ $(libs-y)
+
+	
+	init-y      := $(patsubst %/, %/built-in.o, $(init-y))
+	core-y      := $(patsubst %/, %/built-in.o, $(core-y))
+	drivers-y   := $(patsubst %/, %/built-in.o, $(drivers-y))
+	net-y       := $(patsubst %/, %/built-in.o, $(net-y))
+	libs-y1     := $(patsubst %/, %/lib.a, $(libs-y))
+	libs-y2     := $(patsubst %/, %/built-in.o, $(libs-y))
+	libs-y      := $(libs-y1) $(libs-y2)
+	
+	init-y      := init/
+	drivers-y   := drivers/ sound/ firmware/
+	net-y       := net/
+	libs-y      := lib/
+	core-y      := usr/
+	core-y      += kernel/ mm/ fs/ ipc/ security/ crypto/ block/	
+
+	
+	obj-y	builtin-target
+	*/.o -> */built-in.o 
+	
+	*/../built-in.o 	
+
+	*/built-in.o */built-in.o */built-in.o */built-in.o
+
+	/vmlinux.o	
+
+	LD -> vmlinux -> Image -> zImage
+ 
+. 添加自己的代码到内核:
+	cd drivers/
+	mkdir test
+	vim Makefile
+		obj-y	+= test/
+
+	cd test/
+		vim func.c
+		vim Makefile
+			obj-y	+= func.o
+
+. 针对自己的代码添加配置选项:
+	mconf
+	conf
+
+	vim drivers/Kconfig
+		source "drivers/test/Kconfig"
+	
+	vim drivers/test/Kconfig
+		config  TEST_FUNC
+		    bool    "test func ............."
+
+		CONFIG_TEST_FUNC=y		选中;
+
+. Kconfig语法:
+	mainmenu: 主菜单
+	menu/endmenu	: 菜单;
+	config	: 选项;
+	choice/endchoice : 单选;
+	source	: include
+	default	: 默认值
+	select	: 选中;
+	
+	prompt	: 提示符
+	help	: 帮助
+	depends on : 依赖
+
+	bool	: 2选1	y/n
+	tristate: 3选1	y/n/m
+		CONFIG_MODULES
+	int 	: 10进制输入
+	hex		: 16进制输入
+	string	: 字符串输入
+	range	: 指定数据范围;
+					
+	comment	: 分割信息;
+
+. 内核裁减和移植
+	裁减: make menuconfig
+	移植: arm-linux-gcc
+		  mach-tiny4412.c
+			+ 驱动;
+	
+	head.S + main.c
+	
+homework:	
+. 补丁
+. 添加自己代码到内核
+. 添加自己选项到内核
+
+. 模块(插入, 拔出内核)
+	设备驱动	
+	.ko
+	
+	lsmod	(显示当前系统的模块)
+	insmod	(动态插入模块)
+	rmmod	(动态拔出模块)
+	
+. 模块编译:
+	make modules	(只编译系统的模块)
+	make M=drivers/test/ modules	(只编译指定目录的模块)
+	make M=drivers/test/ clean		(只清除指定目录的模块)
+		
+. 模块分离及其Makefile变形;
+	...
+
+. 静态符号表:
+	System.map	(编译进内核) obj-y
+
+. 动态符号表	(编译成模块并插入) obj-m
+	cat /proc/kallsyms | grep test_func
+
+. 模块安装和使用 (rmmod 找不到设备)
+	make -C $(KERNEL_DIR) M=`pwd` modules_install INSTALL_MOD_PATH=$(ROOTFS)
+
+	depmod				(建立模块依赖关系)
+	modprobe func		(插入模块) insmod
+	modprobe -r func	(拔出模块) rmmod
+
+. 模块入口和出口	(main入口 exit出口)
+	init_module();		insmod
+	cleanup_module();	rmmod
+
+	module_init(func_init);	自定义入口
+	moduel_exit(func_exit);	自定义出口
+
+. 设置代码启动时运行
+	__initcall();
+	__exitcall();
+
+. 多模块编译
+	obj-m	+= func.o
+	obj-m 	+= test.o
+
+	func.ko
+	test.ko
+
+. 多文件模块编译
+	obj-m		+= mod.o
+	mod-objs 	+= test.o func.o
+
+. 模块语句宏
+	modinfo
+	
+	MODULE_LICENSE("GPL");						(公共许可)
+	MODULE_AUTHOR("xuwei www.uplooking.com");
+	MODULE_VERSION("1.0");
+
+. 参考书籍:
+	<linux内核设计与实现>	V
+	<linux设备驱动程序>	**	V
+	<深入理解linux内核>		V
+
+. 模块间依赖:
+	test -> func (print)
+
+. 作用域(命名空间):
+	模块有作用域
+	内核有作用域
+	全局作用域
+	
+	模块A -X-> 模块B
+	模块A -X-> kernel
+	kernel-X-> 模块A
+
+	insmod xxx.ko
+		   struct module __this_module = {
+		   		.init
+				.exit
+
+. 导出符号:
+	EXPORT_SYMBOL(print);
+
+	导出后:
+	模块A --> 模块B
+	模块B --> 模块A
+	模块A --> kernel
+
+	kernel-X-> 模块A
+	insmod xxx.ko
+
+. lsmod
+	/ # lsmod 
+	test 739 0 - Live 0xbf018000 (O)
+	func 633 1 test, Live 0xbf014000 (O)
+			 ^
+			 引用计数
+			 0 rmmod
+	
+. printk
+	#define KERN_EMERG  "<0>"   /* system is unusable           */
+	#define KERN_ALERT  "<1>"   /* action must be taken immediately */
+	#define KERN_CRIT   "<2>"   /* critical conditions          */
+	#define KERN_ERR    "<3>"   /* error conditions         */
+	#define KERN_WARNING    "<4>"   /* warning conditions           */
+	#define KERN_NOTICE "<5>"   /* normal but significant condition */
+	#define KERN_INFO   "<6>"   /* informational            */
+	#define KERN_DEBUG  "<7>"   /* debug-level messages         */
+	
+	linux-3.5/kernel/printk.c
+	#define DEFAULT_CONSOLE_LOGLEVEL 7 /* anything MORE serious than KERN_DEBUG */
+
+. 添加系统调用:
+	系统调用:
+	main -> open -> kernel -> sys_open
+			swi  -> svc 
+			swi #?
+				 -> 0xffff0008
+				 -> b do_swi
+				 -> ? -> 5 : open
+				 	r0 r1 r2 
+	
+	linux-3.5/arch/arm/kernel/calls.S	(系统调用函数列表)
+		
+	SYSCALL_DEFINEx(open, 
+				  ^
+				  参数个数
+	__SYSCALL_DEFINEx(3, ...)
+
+	SYSCALL_DEFINE
+
+. 返回值和错误码
+	errno	<- kernel
+	用户返回-1
+	-1		 
+	perror();
+	
+	内核返回-错误码
+	EBADF	
+	EBUSY
+	EFAULT
+	ENOMEM
+	...
+
+. 一切皆文件
+	open read write lseek ioctl fcntl ...
+
+. 设备分类
+	字符设备	c
+		1)io要求实时性的;
+		2)字符方式访问;
+
+	块设备		b
+		1)io要求缓冲访问(非实时性)
+		2)块为单位访问;
+
+	网络设备
+		socket
+
+. 字符设备框架
+	app			app			app
+-----------------------------------------	API
+	open		open		open		(系统调用)	
+
+	/dev/fb0	/dev/led0	/dev/bell0
+	major minor	major minor	major minor
+	1	  2		254	  3		255	  0
+
+kernel-list -> cdev -> cdev -> cdev -> cdev -> ...
+			   fops	   fops	   fops	   fops
+			   dev_t   dev_t   dev_t   dev_t
+			   1   0   254 0   255 0
+			   count   count   count
+
+			   fops	   fops	   fops
+			   .open   .open   .open
+			   .read   .read   .read
+			   .write  .write  .write
+			   ...	   ...	   ...
+	
+---------------------------------------------
+			  DISPLEY  GPM3	   GPD1
+
+. 代码结构:
+	app.c	应用程序 -> 系统调用 -> 设备驱动 -> 操作硬件
+
+	test.c	设备驱动代码 1)提供操作硬件(裸板代码)
+						 2)提供系统调用(给用户提供接口)
+
+			register_chrdev();	--> 动态返回设备号;
+
+	test	设备驱动的接口 (主次设备号 标识 那个驱动)
+		mknod -m 777 test c 250 0
+
+. 字符设备驱动
+	struct file_operations fops;
+
+	ret = register_chrdev(major, name, &fops);	注册major和0~255个次设备;
+	major : 主设备;
+	name  : 设备名;	/proc/devices	
+	fops  : 操作集合; .owner .open .release .read .write .llseek ....
+
+	major : 0 (动态申请主设备号) 成功了返回主设备号
+		  > 0 (设置成主设备号)   成功了返回 0
+
+	unregister_chrdev(major, name);
+	major : 主设备;
+	name  : 设备名;
+
+. sys_read
+  sys_write
+
+. 内核代码的可移植性:
+	1) 函数调用
+	module_init();	平台版本无关函数;
+	__initcall();	与平台与版本相关的函数;	
+
+	register_chrdev();		平台版本无关函数;
+	__register_chrdev();	与平台与版本相关的函数;
+
+	2) 头文件包含
+	asm/delay.h		与平台相关的头文件	
+	linux/delay.h	与平台无关的头文件
+
+	3) 数据类型
+	loff_t 			与平台无关的类型;
+	long long		固定类型;
+	long			
+
+. 设备号:
+	dev_t dev;	32bit
+
+	MAJOR();
+	MINOR();
+	MKDEV();
+
+	major | minor
+	12bit	20bit
+	
+	4K		1M
+
+. 引用计数:
+	当前模块被人引用的计数;
+	+1
+
+	== 0 可以rmmod
+	>  0 不可以rmmod
+
+. read
+	sys_read
+	SYSCALL_DEFINEx
+	SYSCALL_DEFINE3(read, unsigned int, fd, char __user *, buf, size_t, count)
+	{
+		
+	}
+	->
+	long sys_read(unsigned int fd, char __user * buf, size_t count)
+	{
+	
+	}
+
+	ssize_t test_read (struct file *filp, char __user *buf, size_t size, loff_t *offset)
+	filp : 文件指针;
+	buf  : 用户空间buffer;
+	size : 读的数据大小;
+	offset:文件当前偏移;
+
+. write
+	SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf, size_t, count)
+	{
+	
+	}
+	->
+	long sys_write(unsigned int fd, const char __user * buf, size_t count)
+	{
+	
+	}
+
+	ssize_t test_write (struct file *filp, const char __user *buf, size_t size, loff_t *offset)
+	filp : 文件指针;
+	buf  : 用户空间buffer;
+	size : 写的数据大小;
+	offset:文件当前偏移;
+
+. lseek
+	lseek -> sys_lseek -> test_llseek
+
+	off_t lseek(int fildes, off_t offset, int whence);
+	loff_t test_llseek (struct file *filp, loff_t offset, int whence)
+
+. filp->f_pos
+	只有llseek 和 kernel 可改;
+	read write 不能改filp->f_pos;
+
+. copy_to_user
+. copy_from_user
+	先检查user空间地址是否可写, 再写;
+	返回没有拷贝成功的字符个数;
+
+. gpio (静态映射的io操作)
+	gpio ==> S3C64XX_GPx(n)
+	         EXYNOS4X12_GPM4(n)
+
+	int gpio_request(gpio, "name");
+	void gpio_free(gpio);
+
+	int gpio_direction_output(gpio, dat);
+	int gpio_direction_input(gpio);
+
+	int s3c_gpio_cfgpin(gpio, S3C_GPIO_SFN(con));
+
+	void gpio_set_value(gpio, dat);
+	int gpio_get_value(gpio);
+
+. 动态映射的io操作;
+	virt = ioremap(phty, size);
+				   ^
+				   裸板代码寄存器地址
+	^ 
+	驱动访问的寄存器地址(虚拟地址);
+
+. 内核中的代码风格:
+	1)分层架构;
+	2)面向对象;
+		属性
+		方法
+
+		struct module
+		struct cdev
+		struct file
+
+		app
+		 |
+	  系统调用	#系统调用号
+		 |
+	  字符设备	#struct cdev
+	     |
+      设备驱动	
+	     |
+	  裸板驱动
+
+. container_of(filp->f_op, struct test_dev, fops);
+			   ^ 指向结构体成员指针
+			   			   ^ 结构体			^结构体中成员的名称;
+
+. sys_open  
+	fs/open.c:
+	SYSCALL_DEFINE3(open, const char __user *, filename, int, flags, umode_t, mode)
+		ret = do_sys_open(AT_FDCWD, filename, flags, mode);
+	
+	long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
+	{
+		fd = get_unused_fd_flags(flags);
+		if (fd >= 0) {
+		    struct file *f = do_filp_open(dfd, tmp, &op, lookup);
+			if (IS_ERR(f)) {
+				put_unused_fd(fd);
+				fd = PTR_ERR(f);
+			} else {
+				fsnotify_open(f);
+				fd_install(fd, f);
+			}
+		return fd;
+	}
+
+	fs/namei.c:
+	filp = path_openat(dfd, pathname, &nd, op, flags | LOOKUP_RCU);
+		
+	static struct file *path_openat(int dfd, const char *pathname,
+	        struct nameidata *nd, const struct open_flags *op, int flags)
+	{
+		...
+		filp = do_last(nd, &path, op, pathname);		//返回文件指针;
+		...
+		return filp;
+	}
+	
+	static struct file *do_last(struct nameidata *nd, struct path *path,
+	        const struct open_flags *op, const char *pathname)
+	{
+		struct file *filp;
+		struct inode *inode;
+		...
+		error = may_open(&nd->path, acc_mode, open_flag);
+		if (error)
+			goto exit;
+		filp = nameidata_to_filp(nd);
+		...
+		return filp;
+	}
+
+	struct file *nameidata_to_filp(struct nameidata *nd)
+	{
+		...
+		res = do_dentry_open(nd->path.dentry, nd->path.mnt,
+		       filp, NULL, cred);
+		...
+		filp = res;
+
+		reture filp;
+	}
+
+	fs/open.c:
+	static struct file *do_dentry_open(struct dentry *dentry, struct vfsmount *mnt,
+	   	struct file *f, int (*open)(struct inode *, struct file *),
+				const struct cred *cred)
+	{
+		inode = dentry->d_inode;
+		...
+		f->f_mapping = inode->i_mapping;
+		f->f_path.dentry = dentry;
+		f->f_path.mnt = mnt;
+		f->f_pos = 0;
+		...
+		f->f_op = fops_get(inode->i_fop);
+		...	
+		if (!open && f->f_op)
+			open = f->f_op->open;
+		if (open) {
+			error = open(inode, f);		//设备驱动的open调用;
+			if (error)
+				goto cleanup_all;
+		}
+		...
+	}
+
+. inode 
+	struct inode
+		unsigned long   i_ino;
+		dev_t           i_rdev;
+		const struct file_operations    *i_fop;
+	
+. file
+	struct file
+		const struct file_operations    *f_op;
+		fmode_t         f_mode;
+		loff_t          f_pos;
+		void            *private_data;
+
+. ioctl (万能函数, 或者杂函数)
+	cmd
+	32bit
+	[2][14][8][8]
+	dir
+	   size
+		   type
+		   	  code
+
+	dir : 方向; 1)没有参数
+				2)入参;
+				3)出参;
+				4)入参, 出参;
+
+	size: 参数的大小;
+				
+	type: 控制驱动的类型;
+				led
+				bell
+				button
+	code/nr:驱动的命令;
+				0	(all_on)	
+				1	(all_off)
+				2	(on)
+				3	(off)
+			
+	ioctl-number.txt
+		记录系统保留cmd号; 不能使用; 0x1 0x5 ... 可以使用;
+	
+	创建命令的宏:
+	_IO
+	_IOW
+	_IOR
+	_IOWR
+
+	#define _IO(type,nr)        _IOC(_IOC_NONE,(type),(nr),0)
+	#define _IOR(type,nr,size)  _IOC(_IOC_READ,(type),(nr),(_IOC_TYPECHECK(size)))
+	#define _IOW(type,nr,size)  _IOC(_IOC_WRITE,(type),(nr),(_IOC_TYPECHECK(size)))
+	#define _IOWR(type,nr,size) _IOC(_IOC_READ|_IOC_WRITE,(type),(nr),(_IOC_TYPECHECK(size)))
+
+. bell
+	EXYNOS4_GPD0();
+
+. 模块传参
+	int val;
+	module_param(val, int, 0);
+	char *name;
+	module_param(name, charp, 0);
+
+	insmod test.ko val=123;
+	insmod test.ko name="hello"
+
+. 分离的字符设备注册方法;
+	struct cdev
+	register_chrdev_region();
+	alloc_chrdev_region();
+
+	cdev_alloc();
+	cdev_init();
+	cdev_add();
+	cdev_del();
+
+	register_chrdev();
+	unregister_chrdev();
+
+	__register_chrdev();
+	__unregister_chrdev();
+
+. 内核错误处理:
+	1)统一地址错误处理;
+	2)正确返回错误号;
+		include/linux/errno.h
+			include/generated/asm/errno.h
+			include/asm-generic/errno-base.h
+			include/asm-generic/errno.h
+		EPERM		1
+		EINTR		4
+		EAGAIN		11
+		ENOMEM		12
+		EFAULT		14
+		EBUSY		16
+		EINVAL		22	
+		ERESTARTSYS	512
+	3)错误判断宏:	
+		#define MAX_ERRNO   4095
+		IS_ERR_VALUE();
+		IS_ERR();
+		IS_ERR_OR_NULL();
+		ERR_PTR();	
+		PTR_ERR();
+
+. current
+	指向当前进程结构体;
+	struct task_struct
+		pid_t pid;
+		char comm[TASK_COMM_LEN];
+		struct files_struct *files;
+
+	fd -> struct file
+
+. struct task_struct
+	current;
+
+. struct thread_info
+	current_thread_info();
+	
+. 进程栈
+	用户空间栈	sp_user
+		10M/6M
+	内核空间栈	sp_svc
+		8K
+		THREAD_SIZE
+
+. 非阻塞io
+	read -> file 
+	0
+	-1
+
+. 阻塞io
+	read -> /dev/input/mouse0
+	read -> /dev/......
+
+	read()
+		....
+	write()
+		....
+
+. 实现阻塞io:
+. 死循环阻塞;
+	消耗cpu 资源;
+	volatile bool empty = true;
+	while(empty)
+		;
+
+. 睡眠阻塞;
+	TASK_UNINTERRUPTIBLE	不可中断睡眠;(不能被信号打断)
+	TASK_INTERRUPTIBLE		可中断睡眠;  (被信号打断)
+	TASK_RUNNING
+
+	set_current_state(TASK_UNINTERRUPTIBLE);	修改进程状态;
+	schedule();									调度;
+
+	wake_up_process();		唤醒指定进程;
+
+. 内核态阻塞:
+	TASK_UNINTERRUPTIBLE
+	while(empty)
+		;
+
+	注意:
+		内核态不处理信号, 用户态处理信号(清信号);
+
+. x86内核源码路径:
+	/lib/modules/2.6.18-194.el5PAE/build
+	/usr/src/kernels/2.6.18-194.el5-i686
+
+. 阻塞队列
+	定义:
+		wait_queue_head_t wq;		//阻塞队列头;
+
+	初始化:
+		void init_waitqueue_head(wait_queue_head_t *wq);
+
+	定义并初始化:
+		DECLEAR_WAIT_QUEUE_HEAD(name);	(没有)
+
+	等待事件:
+		void wait_event(wq, condition);
+		int wait_event_interruptible(wq, condition); //返回非0, 被信号中断
+		int wait_event_interruptible_exclusive(wq, condition); //返回非0, 被信号中断
+
+	唤醒等待进程:
+		void wake_up(&wq);					//叫醒队列中的所有进程;
+		void wake_up_interruptible(&wq);	//同上;
+		void wake_up_interruptible_nr(&wq, nr);	//叫醒队列中nr个进程;
+
+. 信号
+	信号是上层模拟底层中断的实现;
+	
+. select/poll
+	同步阻塞多个io;	(sys_poll)
+
+	poll_wait();			//调用两次; 1)sys_poll加入队列头	
+										2)判断是否可读;	return POLLIN;
+
+	return POLLIN;
+
+. 异步io
+	非阻塞io
+	fcntl(fd, SET_FLAG, xxx | F_ASYNC);	--> 
+
+	test_write:
+		kill_fasync(&fapp, SIGIO, POLL_IN);	//发送信号SIGIO 给异步队列;
+
+	test_fasync:
+		fasync_helper(fd, filp, on, &fapp);	//从异步队列中加入/删除;
+
+. 总结:
+				
+					io
+				/		 \
+		非阻塞				阻塞
+		return -1			return size;
+		return size			设备/管道
+	文件		\				
+	/			 \
+  read		fcntl(F_ASYNC)
+			异步队列
+			信号通知
+
+
+				阻塞
+		/				  \
+	loop				sleep
+TASK_RUNNING	 /					\
+				D					S
+	  TASK_UNINTERRUPTIBLE		TASK_INTERRUPTIBLE
+		wake_up_process				
+		wake_up				/					\		
+						signal				wake_up_process
+						  |						 |
+					signal_pending()			read
+				  return -ERESTARTSYS;
+				  	(用户态处理信号)
+
+	select/poll
+		同时监听多个文件描述符号;
+		read write error
+	
+================================================================
+
+./a.out -> timer -> irq -> ./b.out -> timer -> irq 
+<-----------------------------------------------
+
+================================================================
+. 竞争:
+. 多任务
+	进程切换
+	线程互斥锁/文件锁;
+
+. 时间片
+	进程占用cpu的时间;
+
+. 抢占
+	内核线程 抢占了 内核线程
+	信号 	 抢占了 进程
+	中断 	 抢占了 进程 (进程调度)
+	中断 	 抢占了 内核
+
+	可抢占内核
+		支持内核态内核线程抢占;
+	不可抢占内核
+		不支持内核态内核线程抢占;
+
+	高级别 占用 低级别
+
+	CONFIG_PREEMPT		可抢占;
+	CONFIG_SMP			多核;
+
+. 竞争
+	不同内核线程竞争公共资源;	
+
+	禁止抢占; 	(单核可抢占内核)
+		++
+		--
+
+	preempt_disbale();	内核态的线程抢占; 禁止该线程被抢占; current_thread_info()->preempt_count;
+	preempt_enable();
+
+	系统调用: 
+		test_open
+		test_read
+		test_write
+		test_release
+		...
+
+	注意:
+		单核的不可抢占内核不存在竞争;
+
+. 互斥
+	锁保护
+
+. 并发
+	共享	read
+
+. 锁
+	变量
+
+	多核使用锁保护数据
+
+. ldrex				专门用于多核加锁的;	
+. strex				......				(多核同时写只有一个人写成功)
+	ldrex	V
+	ldrex	V
+	strex	V
+	strex	X
+
+	1)ldrex后才能写strex;
+	2)strex后立即写strex失败;
+
+. 锁的分类:
+	互斥锁(独占锁)
+	读锁  (共享锁)
+
+. 自旋锁: 加锁失败循环等待;
+	spinlock_t lock;
+	spin_lock_init();	
+	spin_lock();	
+	spin_trylock();
+	spin_unlock();
+	
+	希望当前进程在内核态获取资源, 并尽快完成;
+
+	lock == 0 : 没有加锁;
+	lock == 1 : 加锁了;
+
+	ldrex	
+	strex	V
+
+	1)禁止抢占;	(不同级别竞争)
+	2)加锁;		(同级别竞争)
+
+	pthread_mutex_init();	线程互斥锁;	(多线程运行, 信号可打断) 
+	sigprocmask();			屏蔽信号;	(禁止信号, 禁止抢占)
+
+. 互斥锁: 加锁失败睡眠阻塞;
+	定义:
+		struct mutex mutex;
+
+	初始化:
+		mutex_init(struct mutext *mutex);
+
+	加锁:
+		void mutex_lock(struct mutext *mutex);				D 不可中断睡眠;
+		int mutex_trylock(struct mutext *mutex);			不会睡眠;
+		int mutex_lock_interruptible(struct mutext *mutex);	S 可中断睡眠;
+				-EINTR	(被信号中断了)
+				return -ERESTARTSYS;
+	解锁:
+		mutex_unlock(struct mutext *mutex);
+			wake_up_process();
+
+	mutex : count = 1;	没有加锁;
+			count = 0;	表示第一个人加锁成功;
+			count = -1;	表示第二个人加锁失败; (睡眠)
+			count = -1;	表示第n 个人加锁失败; (睡眠)
+			count = -1;	表示第n 个人加锁失败; (睡眠)
+			count = -1;	表示第n 个人加锁失败; (睡眠)
+
+	
+. 总结:
+							竞争
+				/				   			\
+			单核						   多核
+		/			\						 |		
+单核不可抢占内核	可抢占内核				 |
+	没有竞争		 禁止抢占			   加锁
+
+
+					锁
+			/		 		 \
+		自旋锁				互斥锁
+		spin_lock			struct mutex mutex
+	   spin_unlock			mutex_lock
+	 循环等待加锁成功	   睡眠等待加锁成功
+						/					\
+						D					S
+				  不会信号打断			会被信号打断
+				  mutex_unlock唤醒		signal
+				  						mutex_unlock
+									/				\
+								signal			  mutex_unlock
+						return -ERESTARTSYS			 
+
+. 使用注意:
+	1)不能拿着锁睡眠; (死锁)
+	2)不能拿着锁跳出(结束);	(死锁)	 
+	3)谁加的锁谁解锁;
+		spin_lock(必须尽快完成)
+		mutex_lock(可以慢慢完成)
+	4)禁止抢占中不能睡眠;
+	  spin_lock不能睡眠;
+	  mutex_lock可以睡眠;
+	5)中断中不允许睡眠的;
+	  中断中不能使用mutex_lock;
+			只能使用spin_lock;	
+
+. 完成量: 生产者消费者模型;
+	#include <linux/completion.h>
+
+	struct completion {
+		unsigned int done;
+		wait_queue_head_t wait;
+	}
+
+	定义:
+		struct completion com;
+
+	初始化:
+		init_completion(&com);
+		done的初始值为0
+
+	定义并初始化:
+		DECLARE_COMPLETION(com);
+		done的初始值为0
+
+	等待完成量:
+		void wait_for_completion(struct completion *com);				D
+		int wait_for_completion_interruptible(struct completion *com);	S
+		返回-ERESTARTSYS表示被信号唤醒, 0 completion
+
+		if(done的值不等于0)
+			将done减1后立即返回
+		else
+			进入睡眠
+
+	唤醒完成量:
+		void complete(struct completion *com);
+		将done的值加1, 然后唤醒第一个等待该完成量的进程
+
+		void complete_all(struct completion *com);
+		将done的值设为最大, 然后唤醒所有等待该完成量的进程
+		
+. 信号量: 1)完成量 2)互斥锁 3)设备忙
+	#include <linux/semaphore.h>
+
+	struct semaphore {
+		raw_spinlock_t          lock;
+		unsigned int            count;
+		struct list_head        wait_list;
+	};
+
+	定义:
+		struct semaphore sem;
+
+	初始化:
+		void sema_init(struct semaphore *sem, int val);  //val为count的初始值
+
+		#define init_MUTEX(sem) sema_init(sem, 1)				(互斥锁的实现)
+		#define init_MUTEX_LOCKED(sem) sema_init(sem, 0)		(完成量的实现)
+
+	定义并初始化:
+		DECLARE_MUTEX(sem);  //count的初始值为1
+
+
+	锁定信号量:
+		void down(struct semaphore *sem);
+
+		int down_interruptible(struct semaphore *sem);
+		返回非0值表示被信号(不是被UP)唤醒, if(down_interruptible(&sem) return -ERESTARTSYS;
+
+		int down_trylock(struct semaphore *sem);
+		返回非0表示没有获取锁
+
+		if(count的值大于0)
+			将count减1后立即返回
+		else
+			进入睡眠, down_trylock不会进入睡眠
+
+	释放信号量:
+		void up(struct semaphore *sem);
+
+		count的值加1
+
+		if(有进程等待该信号量)
+			唤醒第一个等待该信号量的进程
+
+	1)实现完成量;
+	2)设备忙; (只能有一个人打开)
+	3)互斥锁; (...)
+
+. 锁的分类:
+	互斥锁(独占锁) (写)
+		0	false	
+		1	true
+	读锁  (共享锁)
+		500	共享500个人读;
+		-1
+	读写锁(共享独占锁)
+		读锁
+		写锁
+	pthread_rwlock_init
+	pthread_rwlock_wrlock
+	pthread_rwlock_rdlock
+		500
+		-1		rdlock
+		-500	wrlock
+	读写区域锁:
+		500	start end
+		struct flock	
+		fcntl
+	读拷贝锁:
+		value buffer
+
+. 原子变量:	ldrex strex
+	原子变量:
+	arch/arm/include/asm/atomic.h
+
+	定义并初始化
+	atomic_t v = ATOMIC_INIT(0);
+
+	写
+	void atomic_set(atomic_t *v, int i);
+
+	读
+	int atomic_read(atomic_t *v);
+
+	自增, 并返回新值是否为0
+	int atomic_inc_and_test(atomic_t *v);
+
+	自减, 并返回新值是否为0
+	int atomic_dec_and_test(atomic_t *v);
+
+	写新值, 并返回旧值;
+	int atomic_xchg(atomic_t *v, int new);	
+
+	比较如果旧值为old, 那么写新值new, 并返回旧值;
+	int atomic_cmpxchg(atomic_t *ptr, int old, int new);
+	
+	自增:
+	atomic_inc(atomic_t *v);	++
+	atomic_dec(atomic_t *v);	++
+
+	增量:
+	atomic_add(int new, atomic_t *v);	+= new;
+	atomic_sub(int new, atomic_t *v);	-= new;
+	
+	#define atomic_inc(v)       atomic_add(1, v)
+	#define atomic_dec(v)       atomic_sub(1, v)
+
+	#define atomic_inc_and_test(v)  (atomic_add_return(1, v) == 0)
+	#define atomic_dec_and_test(v)  (atomic_sub_return(1, v) == 0)
+	#define atomic_inc_return(v)    (atomic_add_return(1, v))
+	#define atomic_dec_return(v)    (atomic_sub_return(1, v))
+	#define atomic_sub_and_test(i, v) (atomic_sub_return(i, v) == 0)
+
+	#define atomic_add_negative(i,v) (atomic_add_return(i, v) < 0)
+
+	原子bic mask
+	atomic_clear_mask(unsigned long mask, unsigned long *addr);
+
+	1)完成量2)互斥锁3)自旋锁, ...
+
+. 原子位:
+	原子位:
+	arch/arm/include/asm/bitops.h:204
+
+	操作从地址p开始下标为nr(0 --> 0xffffffff)的位
+
+	void set_bit(unsigned int nr, unsigned long *p);			X
+	void clear_bit(unsigned int nr, unsigned long *p);			X
+	void change_bit(unsigned int nr, unsigned long *p);			X
+
+	int test_and_set_bit(unsigned int nr, unsigned long *p);
+	int test_and_clear_bit(unsigned int nr, unsigned long *p);
+	int test_and_change_bit(unsigned int nr, unsigned long *p);
+	test函数返回旧值
+
+
+	_set_bit();
+	_clear_bit();
+	_change_bit();
+
+	_test_and_set_bit();
+	_test_and_clear_bit();
+	_test_and_change_bit();
+	
+可用:
+	__set_bit();
+	__clear_bit();
+	__change_bit();
+	test_bit();
+	__test_and_set_bit();
+	__test_and_clear_bit();
+	__test_and_change_bit();
+到此为止可用;
+
+	____atomic_set_bit();
+
+------------------------------------------------------------------
+. 中断:
+	内核态的中断实现:
+
+	1)异常向量表
+	2)gic/vic中断控制器;
+	3)cpsr.i 使能
+	4)开启中断源;
+	5)实现中断处理函数;
+		中断向量表;
+
+	XEINT26 - XEINT29			
+
+	IRQ_EINT(26)
+	gpio_to_irq(EXYNOS4_GPX3(2));
+
+	#include <linux/interrupt.h>
+
+	int request_irq(unsigned int irq, irq_handler_t handler,
+			unsigned long irqflags, const char *devname, void *dev_id)
+
+		irq:
+			中断号 arch/arm/plat-s3c64xx/include/plat/irqs.h
+				   arch/arm/plat-samsung/include/plat/irqs.h
+				   arch/arm/mach-exynos/include/mach/irqs.h	
+		handler:
+			中断处理函数 irqreturn_t handler(int irq, void *dev_id);
+			irqreturn_t:
+				See include/linux/irqreturn.h
+
+		irqflags:
+			See line 21-59 in include/linux/interrupt.h
+			使用IRQF_SHARED共享irq时, irqflags必须相同
+			如: request_irq(IRQ_EINT(0), handler1,
+					IRQF_TRIGGER_FALLING | IRQF_SHARED, "dev1", &dev1);
+
+				request_irq(IRQ_EINT(0), handler2,
+					IRQF_TRIGGER_FALLING | IRQF_SHARED, "dev2", &dev2);
+
+		devname:
+			设备名, cat /proc/interrupts
+
+		dev_id:
+			发生中断时将dev_id传递给handler函数,
+				irqflags含有IRQF_SHARED时dev_id不能为NULL, 并且要保证唯一
+			dev_id一般采用当前设备的结构体指针
+
+
+	void free_irq ( unsigned int irq, void * dev_id);
+		释放匹配irq和dev_id的中断, 如果irq有多个相同的dev_id, 将释放第一个
+		So, 共享中断的dev_id不是唯一时, 可能会释放到其它设备的中断
+
+. 竞争:
+	系统调用和系统调用竞争:
+	app -> open -> func();
+	app -> open -> func();
+
+	app -> open -> lock() 
+	app -> open -> lock(失败); 睡眠/循环等待;
+
+	系统调用和中断竞争;	spin_lock_irq(); spin_lock_irqsave();
+						spin_unlock_irq();spin_unlock_irqrestore();
+
+	app -> open    -> 	func();
+	irq -> handler -> 	func();
+
+	app -> open    -> func()
+	irq -> handler -> lock 拿不到死锁了;
+						   (屏蔽中断了, 其他进程没法调度)
+
+	irq_disable();
+	app -> open -> disable_irq -> func() -> enable_irq();
+
+	func();	--> app app app -> lock
+			--> irq app	--> disable_irq
+
+
+	中断和中断竞争:		
+	单核中断不会和中断竞争;	
+	多核可能出现中断与中断竞争;
+	spin_lock();
+
+. 进程上半部和下半部
+	进程的切换;
+	进程的执行;
+
+. 中断上半部和下半部
+	上半部响应中断;
+	下半部处理中断;
+	
+. 内核线程:
+	创建内核线程:
+		struct task_struct *kthread_create(int (*threadfn)(void *data),
+				void *data, const char namefmt[]);
+
+	唤醒内核线程(可以唤醒所有进程(线程)):
+		wake_up_process(struct task_struct *k);
+
+	创建并运行内核线程:
+		struct task_struct *kthread_run(int (*threadfn)(void *data),
+				void *data, const char namefmt[]);
+
+	通知内核线程停止:
+		int kthread_stop(struct task_struct *k);
+		返回threadfn函数的返回值, 如果k没有被wake_up_process(k)过将返回-EINTR
+		不是强制停止, 如果内核线程不停止将一直等待
+
+	检查是否收到停止信号:
+		int kthread_should_stop(void);
+				
+. 练习:
+	1)修改key中断代码; 下半部由线程实现;
+
+. 下半部实现1, 工作队列
+. 工作任务: (希望中断处理函数慢慢完成的, 使用工作任务作为下半部)
+	定义:
+		struct work_struct work;
+
+	初始化:
+		INIT_WORK(struct work_struct *work, void (*func)(struct work_struct *work));
+
+	定义并初始化:
+		DECLARE_WORK(name, void (*func)(struct work_struct *work));
+
+	===========================================================
+
+	调度:
+		int schedule_work(struct work_struct *work);
+		返回1成功, 0已经添加在队列上
+
+	延迟调度:
+		int schedule_delayed_work(struct work_struct *work, unsigned long delay);
+
+	===========================================================
+
+. 工作队列:
+	创建新队列和新工作者线程:
+		struct workqueue_struct *create_workqueue(const char *name);
+
+	调度指定队列:
+		int queue_work(struct workqueue_struct *wq, struct work_struct *work);
+
+	延迟调度指定队列:
+		int queue_delayed_work(struct workqueue_struct *wq,
+				struct work_struct *work, unsigned long delay);
+	销毁队列:
+		void destroy_workqueue(struct workqueue_struct *wq);
+
+	
+	中断处理函数时间过长会丢中断;	??	
+	中断处理函数使用工作任务(内核线程), 同普通线程同时竞争资源;	??
+
+. 软中断:	(希望中断处理函数快速完成的, 使用软中断作为下半部)
+	定义:
+		struct tasklet_struct t;
+
+	初始化:
+		void tasklet_init(struct tasklet_struct *t,
+				void (*func)(unsigned long),unsigned long data);
+
+	定义并初始化:
+		DECLARE_TASKLET(t, void (*func)(unsigned long),unsigned long data);
+
+
+	调度Tasklet:
+		void tasklet_schedule(struct tasklet_struct *t);
+
+		void tasklet_hi_schedule(struct tasklet_struct *t);
+		高优先级
+
+		同一个Tasklet不会同时被多个CPU执行
+
+	禁止Tasklet:
+		void tasklet_disable(struct tasklet_struct *t);
+
+		local_bh_disable();			禁止软中断;
+
+	开启Tasklet:
+		void tasklet_enable(struct tasklet_struct *t);
+
+		local_bh_enable();			使能软中断;
+
+. 级别:
+					app
+		--------------------------
+				kthread_create	
+
+				tasklet_struct
+
+				irq_handler
+
+. 竞争:
+	中断和线程竞争??	关硬中断;
+
+	软中断和线程竞争??	关软中断;
+	
+	线程和线程竞争??	锁;
+
+. 中断总结:
+	. request_irq(); --> irq_handler --> struct work_struct  
+											INIT_WORK();
+											schedule_work();
+					 --> irq_handler --> struct tasklet_struct
+											tasklet_init();
+											tasklet_schedule();
+	. free_irq();
+
+---------------------------------------------------------------
+. pwm rtc wdt ... 
+	pid1 -> timer -> irq -> pid2 -> timer 
+
+. 内核时钟:
+	jiffies = ???;		
+	pwm_timer4 --> ++
+	RTC		   --> ++
+	
+	start = jiffies;
+	end = jiffies;
+
+	HZ
+
+	CONFIG_HZ		200			200HZ	200/s  --> 0.005s -> 5ms 
+					1000		1000HZ	1000/S --> 0.001s -> 1ms
+
+	do_gettimeofday(struct timeval *tv)	us
+
+	getnstimeofday(struct timespec *ts)	ns
+
+. 内核定时器:
+	#include <linux/timer.h>
+
+	定义:
+		struct timer_list timer;
+
+	初始化:
+		void setup_timer(struct timer_list *timer,
+			void (*function)(unsigned long data), unsigned long data);
+		function:
+			超时处理函数
+		data:
+			超时时将data传递给处理函数
+
+	定义并初始化:
+		void DEFINE_TIMER(name, void (*function)(unsigned long data),
+				   unsigned long expires, unsigned long data);
+
+	添加定时器:
+		void add_timer(struct timer_list *timer);
+
+	修改定时器节拍数:
+		int mod_timer(struct timer_list *timer, unsigned long expires);
+		expires:
+			超时节拍数
+		返回值0表示timer未添加并自动添加, 1已添加, 不管0或1都成功修改
+
+	删除定时器:
+		int del_timer(struct timer_list * timer);
+		返回值0表示timer未添加(不需要删除), 1成功删除
+	
+---------------------------------------------------------
+. 内核内存管理:
+	. page
+		4K	(4G)
+		1Mpage
+
+	. kmalloc	1) 小内存	KMALLOC_SIZE 
+				2) 申请快	开机自动映射
+				3) 物理内存连续;	(lcd, dma)
+		GFP_KERNEL	(申请不到睡眠阻塞, 用于内核线程申请内存)
+		GFP_ATOMIC	(申请不到循环阻塞, 用于中断处理函数申请内存)
+		GFP_HIGHUSER
+	. kzalloc
+	. kfree
+
+	. vmalloc	1) 大内存	> 100M
+				2) 申请慢	碎片整理映射
+				3) 物理内存不连续;	(dma)
+		VMALLOC_START
+		VMALLOC_END
+	. vfree
+
+	. phys_to_virt		(kmalloc)
+	  virt_to_phys		(kmalloc)
+	  virt - 0xc0000000 + 0x40000000
+	  		 virt_base	  phys_base
+	  phys_to_page
+
+	. 底端内存	768M
+	. 高端内存	256M
+	. 页框
+	  	phys_to_pfn
+		
+
+. 高速内存池:
+	. kmalloc		找空闲的物理地址; phys_to_virt(); 
+	. kmem_cache	打包数据; 
+
+	struct kmem_cache *kmalloc_caches[SLUB_PAGE_SHIFT];		系统默认的高速内存池;
+	EXPORT_SYMBOL(kmalloc_caches);
+
+	. kmem_cache_create
+	. kmem_cache_destroy
+	. kmem_cache_alloc
+	. kmem_cache_free
+
+	. kmalloc -> size -> index -> kmalloc_caches[index] -> kmem_cache -> void *p
+
+. 内存页:
+	. struct page 	内存页管理	PAGE_SIZE;
+	
+	. alloc_page 
+		--> struct page	申请一页;
+	. alloc_pages 
+		--> 申请多页;
+	. free_page	 -->
+		unsigned long virt;	释放一页;
+	. free_pages  -->
+		--> 释放多页;
+	. page_address 
+		--> 转换page为虚拟地址;
+		page -> virt;
+	. get_order 
+		--> 转换申请大小为多少页;
+		size -> page_size
+	. __get_free_pages
+		--> 申请多少页, 返回虚拟地址;
+	. __free_pages
+		--> 释放多少页;
+
+. 总结:
+
+			->			  -> alloc_pages
+			
+	kmalloc -> kmem_cache -> page
+			   (页数据管理)	 内存页管理
+			   64 64 64
+			-> kmem_cache -> page
+			   128 128 ...
+			   ....
+		  (零售)	   	(批发)
+	
+	kmem_cache:
+		struct kmem_cache_cpu
+			void **freelist;    //一页中的空闲数据链表;
+			...
+			struct page *page;  	//申请到的新页;
+			struct page *partial; 	//循环使用释放的空间的页;
+
+		....
+		struct kmem_cache_node
+			struct list_head partial;	//指向循环使用的有空闲的页链表;
+			...
+			struct list_head full;		//指向开辟空间的满的页链表;
+		....
+
+	以上映射时使能cache, 提高内存访问效率;
+----------------------------------------------------------
+	以下映射时禁止cache, 提供io操作, 保证实时;
+
+. dma使用内存  
+	app    -> BMP_DATA -> write -> driver
+	driver -> BMP_DATA -> VIRT 	-> DDR
+	lcd    <- DMA 	   <- PHYS 	<- DDR
+		
+	set_val(VIDW00ADD0B0, 0x70000000);
+						  ^ PHYS
+				800 * 480 *4 
+
+	. dma_alloc_coherent
+		virt = dma_alloc_coherent(NULL, size, &phys, GFP_KERNEL); 
+		^									  ^
+		返回虚拟地址;						  返回物理地址;
+
+	. dma_free_coherent
+		dma_free_coherent(NULL, size, virt, phys);
+
+. io访问内存:
+	1)静态映射内存;	(开机自动映射)
+		gpio ==> S3C64XX_GPx(n)
+		         EXYNOS4X12_GPM4(n)
+
+				 int gpio_request(gpio, "name");
+				 void gpio_free(gpio);
+
+				 int gpio_direction_output(gpio, dat);
+				 int gpio_direction_input(gpio);
+
+				 int s3c_gpio_cfgpin(gpio, S3C_GPIO_SFN(con));
+
+				 void gpio_set_value(gpio, dat);
+				 int gpio_get_value(gpio);
+
+		start_kernel: (init/main.c)
+			setup_arch:	(arch/arm/kernel/setup.c)
+				paging_init:(arch/arm/mm/mmu.c)
+					devicemaps_init: (arch/arm/mm/mmu.c)
+						if (mdesc->map_io)
+						    mdesc->map_io();
+
+		MACH_TYPE_TINY4412
+		struct machine_desc *mdesc
+		
+			.map_io = smdk4x12_map_io	<---- (arch/arm/mach-exynos/mach-tiny4412.c)
+
+		smdk4x12_map_io:
+			exynos_init_io(NULL, 0);
+				io静态映射;
+				iotable_init();
+				...
+				s3c_init_cpu(samsung_cpu_id, cpu_ids, ARRAY_SIZE(cpu_ids));
+
+	2)动态映射内存;
+		__iomem
+		void *virt = ioremap(phys, size);
+		iounmap(virt);	
+
+		ioread32();
+		ioread16();
+		ioread8();
+		iowrite32();
+		iowrite16();
+		iowrite8();
+
+. 练习:
+1. 09_led 10_bell ioremap实现;
+
+. 设备模型
+	内核电源管理的副产品; 用于管理设备及设备间关系, 分离设备和驱动并匹配设备驱动;
+	生成虚拟文件系统: sysfs
+
+	mount -t sysfs none /sys
+
+	/sys/class/		类的角度看设备
+	/sys/bus/		总线的角度看设备
+	/sys/block/		...
+	/sys/devices/	...
+	/sys/dev/		...
+	/sys/module		...
+	...
+
+. module
+	模块角度看设备
+
+. device	(提供资源)	chrdev(不同)
+	设备角度看设备
+	struct device
+	device_register();
+	device_unregister();
+
+. class		(设备归类)
+	以类的角度看设备
+	struct class 
+	class_register();
+	class_unregister();
+
+. mdev -s	(busybox)
+	扫描/sys并在/dev下生成设备文件; 开机时扫描一次, 就结束了;
+
+	echo /sbin/mdev > /proc/sys/kernel/hotplug
+	告诉内核, 有PF_NETLINK消息, 就调用hotplug应用解析;
+	
+	设备归类后, kernel 调用 /sbin/mdev 
+
+	给应用传递环境变量:
+	ACTION	add/remove
+	DEVNAME	test_dev
+	MAJOR	250
+	MINOR	0
+
+	mdev.conf
+	It uses /etc/mdev.conf with lines
+	[-]DEVNAME UID:GID PERM [>|=PATH] [@|$|*PROG]
+
+. udev 
+	移植udev到开发板系统:
+	tar xf udev-096.tar.bz2
+	vim Makefile
+	prefix = /nfsroot
+	CROSS_COMPILE = arm-linux-
+
+	make
+	make install
+
+	使用udev:
+	udevd -d
+		==> echo "/sbin/mdev" > /proc/sys/kernel/hotplug
+	udevstart
+		==> mdev -s
+
+	udevmonitor &	(PF_NETLINK) (实时监听socket, PF_NETLINK广播消息, 打印输出)
+		==> app (env)
+
+	vim etc/udev/rules.d/test.rules		(规则文件)
+	KERNEL=="wdt",NAME="wdt-dev", RUN+="/app/app"
+
+	if(...==...)
+	if(...!=...)
+		=
+		=
+	udevcontrol reload_rules	(修改规则文件后, 动态重新加载)
+
+. bus	(总线的角度看设备, 匹配设备和驱动的, 调用匹配的驱动入口代码)
+	struct bus_type	
+	bus_register();
+	bus_unregister();
+
+	默认匹配方式是:
+		一定匹配;
+	
+. driver  (分离设备和驱动, 驱动是代码)
+	struct device_driver
+		probe				(驱动入口代码)
+		remove				(驱动出口代码)
+	driver_register();
+	driver_unregister();
+	
+. device  (分离设备和驱动, 设备是资源)
+	struct device;
+	device_register();
+	device_unregister();
+
+			bus
+
+	driver	|	device1
+			|
+	probe	|	device2
+	remove	|	
+			|	device3
+
+	1 个device和1 个driver, 自动匹配;
+	2 个device和1 个driver, 自动匹配这个driver;
+	多个device和多个driver, 所有设备匹配第一个插入的driver;
+
+. mini总线实现:
+	struct mini_device
+	struct mini_driver
+	mini_device_register();
+	mini_device_unregister();
+	mini_driver_register();
+	mini_driver_unregister();
+
+. platform	(平台总线)
+	开机启动平台时, 自动调用平台驱动;
+	struct platform_device
+	struct platform_driver
+	platform_device_register();
+	platform_device_unregister();
+	platform_driver_register();
+	platform_driver_unregister();
+
+	platform总线的匹配规则是设备和驱动同名;
+
+					platform(bus)
+			device				driver
+			s3c_pwm				...	(pwm_request())(pwm_free)(pwm_enable)(pwm_disable)
+			wdt					...
+			adc					xxx_adc
+									platform_get_resource();
+										IORESOURCE_MEM,		ioremap
+										IORESOURCE_IRQ,		request_irq
+									class_register();
+									register_chrdev();	major,minor
+									device_register();
+			...					...
+			i2c0				driver
+									i2c_bus 
+									class 
+							device				driver
+			i2c1				driver
+									i2c_bus
+									class	(适配器)
+							device				driver
+							...
+			...
+			i2c7
+			usb	
+			...
+
+	arch/arm/plat-samsung/devs.c	(三星的设备platform_device);
+
+. 杂类设备
+	struct miscdevice 
+	misc_register();
+	misc_deregister();
+
+. led
+	platform_driver
+	...
+
+. bell
+	pwm -> bell
+	...
+
+. button
+	proc虚拟文件系统:
+		create_proc_entry
+		remove_proc_entry
+
+. adc	(模数转换)
+	...
+	s3c_adc_start
+	s3c_adc_read
+	s3c_adc_register
+	s3c_adc_release
+
+	struct clk;
+	clk_get();
+	clk_put();
+	clk_enable();
+	clk_disenable();
+
+. wdt
+	clk_get();
+	...
+	...
+
+	request_mem_region();	//ioremap映射前申请空间;
+	ioremap();
+
+	"watchdog"	clk
+
+	class : watchdog (子系统)
+		drivers/watchdog/watchdog_core.c	(cdev misc)
+		drivers/watchdog/watchdog_dev.c		(open release write ioctl)
+
+		drivers/watchdog/s3c2410_wdt.c	(start,stop,keepalive,settimeout) -> reg
+			struct watchdog_device
+
+		watchdog_dev.c -> open -> watchdog_start -> s3c2410_wdt.c -> start 
+
+. rtc
+	...	
+	rtc (子系统)
+
+. pwm	
+	clk_get();
+
+	arch/arm/plat-samsung/pwm.c	: open read write close -> /dev/xxx 
+	struct pwd_device
+
+	struct clk 
+	clk_get();
+	clk_enable();
+
+	pwm_request();	--> pwd_device (platform_driver -> list_add_tail())
+	pwm_free();		--> ...
+	pwm_config();	--> pwm_config(struct pwd_device *, xx ns, xx ns);
+	pwm_disable();	--> 
+	pwm_enable();
+
+	IRQ_TIMER0
+	IRQ_TIMER1
+	IRQ_TIMER2
+	IRQ_TIMER3
+	IRQ_TIMER4
+
+. char设备驱动:
+	子系统:
+		应用层以统一的接口访问驱动; 主要指(ioctl命令);
+
+					app
+		---------------------------
+					api
+				  syscall
+			sys_open ... sys_close
+				
+				   子系统
+	(class, device, cdev, fops, dev_ops)		(mdev, udev)
+
+		---------------------------
+			||||	||||	||||
+			board 	board	board
+			reg		reg		reg
+
+
+	rtc : 
+		struct rtc_device
+		struct rtc_class_ops
+			int (*open)(struct device *);
+			void (*release)(struct device *);
+			int (*ioctl)(struct device *, unsigned int, unsigned long);
+			int (*read_time)(struct device *, struct rtc_time *);
+			int (*set_time)(struct device *, struct rtc_time *);
+			int (*read_alarm)(struct device *, struct rtc_wkalrm *);
+			int (*set_alarm)(struct device *, struct rtc_wkalrm *);
+
+	wdt :
+		struct watchdog_device
+		struct watchdog_ops
+			int (*start)(struct watchdog_device *);
+			int (*stop)(struct watchdog_device *);
+			int (*ping)(struct watchdog_device *);
+
+	input:
+		struct input_dev
+		struct input_event
+
+	fb:
+		struct fb_info
+		framebuffer_alloc();	开辟空间fb_info + xxx_par(自己设备的驱动数据); 
+		framebuffer_release();	释放空间fb_info + xxx_par(...);
+		register_framebuffer();		注册fb子系统设备;	fb_info初始化好;
+		unregister_framebuffer();	撤销fb子系统设备;	fb_info......
+		struct fb_ops
+			.fb_fillrect    = cfb_fillrect,   /* Needed !!! */
+			.fb_copyarea    = cfb_copyarea,   /* Needed !!! */
+			.fb_imageblit   = cfb_imageblit,  /* Needed !!! */
+
+	net:
+		struct net_device	
+		register_netdevice
+		unregister_netdevice
+		
+		eth0
+		struct net_device_ops
+			int         (*ndo_open)(struct net_device *dev);
+			int         (*ndo_stop)(struct net_device *dev);
+			netdev_tx_t (*ndo_start_xmit) (struct sk_buff *skb, struct net_device *dev);
+												  ^^^用户发送的数据;
+												  ^^^skb --> usb --> board reg
+												  		 --> ram --> board reg
+														 --> ......
+			int (*ndo_set_mac_address)(struct net_device *dev,
+			                           void *addr);
+									   		^addr -> eeprom
+
+. lcd
+	platform_device 
+		.name = "exynos4-fb"
+
+	platform_driver
+		drivers/video/s3c-fb.c
+
+	struct s3c_fb_platdata smdk4x12_lcd0_pdata = {	
+		.win[0]     = &smdk4x12_fb_win0,
+		.win[1]     = &smdk4x12_fb_win1,
+		.win[2]     = &smdk4x12_fb_win2,
+		.win[3]     = &smdk4x12_fb_win3,
+		.win[4]     = &smdk4x12_fb_win4,
+		.vtiming    = &smdk4x12_lcd_timing,
+		.vidcon0    = VIDCON0_VIDOUT_RGB | VIDCON0_PNRMODE_RGB,
+		.vidcon1    = VIDCON1_INV_HSYNC | VIDCON1_INV_VSYNC,
+		.setup_gpio = exynos4_fimd0_gpio_setup_24bpp,
+	};
+		pd = pdev->dev.platform_data;
+
+	struct s3c_fb_driverdata  s3c_fb_data_exynos4 
+	.driver_data    = (unsigned long)&s3c_fb_data_exynos4,
+
+		fbdrv = (struct s3c_fb_driverdata *)platid->driver_data;
+
+	struct s3c_fb
+
+	struct clk
+		"lcd"	
+		"sclk_fimd"
+
+. input:
+	struct input_dev *dev;
+	input_allocate_device();
+	input_free_device();
+	input_register_device();
+	input_unregister_device();
+	
+	__set_bit(EV_SYN, dev->evbit);	
+	__set_bit(EV_KEY, dev->evbit);	
+	...
+
+	input_event();
+	input_report_key();
+	input_syn();
+
+. i2c总线:
+	struct s3c24xx_i2c *i2c;
+	struct i2c_adapter	适配器	"s3c2410-i2c"
+		adap.algo		&s3c24xx_i2c_algorithm	(开始发送)
+		adap.algo_data	i2c 
+							i2c->reg
+		s3c24xx_i2c_irq
+			发送
+			接收
+	i2c_add_numbered_adapter();
+		i2c_register_adapter
+
+							i2c_adapter
+	struct i2c_board_info					i2c_driver
+	struct i2c_devinfo
+		&__i2c_board_list
+	struct i2c_client
+
+	drivers/i2c/i2c-boardinfo.c:
+		i2c_register_board_info(1, smdk4x12_i2c_devs1, sizeof(...));i2c总线设备注册;
+			{
+			    I2C_BOARD_INFO("ft5x0x_ts", (0x70 >> 1)),
+				.platform_data = &ft5x0x_pdata,
+			},
+
+	i2c_scan_static_board_info
+		if (devinfo->busnum == adapter->nr
+		        && !i2c_new_device(adapter, &devinfo->board_info))
+
+					platform_buf
+	platform_device				platform_driver
+									probe(struct platform_device *pdev)
+
+					i2c_buf
+		i2c_client				i2c_driver
+									probe(struct i2c_client *client)
+		"ft5x0x_ts"				"ft5x0x_ts"
+
+. i2c驱动函数:
+
+	struct i2c_driver driver
+		int (*probe)(struct i2c_client *, const struct i2c_device_id *);
+		int (*remove)(struct i2c_client *);
+
+	i2c_add_driver(&driver);
+	i2c_del_driver(&driver);
+
+	i2c核心层提供的传输数据接口
+	i2c_transfer();
+	i2c_master_send();
+	i2c_master_recv();
+
+	platform_set_drvdata()(;	
+
+. ft5x0x
+. mma7660
+
+
+

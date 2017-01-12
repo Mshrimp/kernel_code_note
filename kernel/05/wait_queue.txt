@@ -1,0 +1,21 @@
+
+
+定义:
+	wait_queue_head_t wq;
+
+初始化:
+	void init_waitqueue_head(wait_queue_head_t *wq);
+
+定义并初始化:
+	DECLEAR_WAIT_QUEUE_HEAD(name);
+
+等待事件:
+	void wait_event(wq, condition);
+	int wait_event_interruptible(wq, condition); //返回非0, 被信号中断
+	int wait_event_interruptible_exclusive(wq, condition); //返回非0, 被信号中断
+
+唤醒等待进程:
+	void wake_up(&wq);
+	void wake_up_interruptible(&wq);
+	void wake_up_interruptible_nr(&wq, nr);
+

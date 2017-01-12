@@ -1,0 +1,6 @@
+
+make menuconfig
+	Kernel Features  --->
+	[*] Preemptible Kernel (EXPERIMENTAL)
+
+

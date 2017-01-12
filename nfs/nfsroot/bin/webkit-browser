@@ -1,0 +1,7 @@
+#!/bin/sh
+
+. setqt4env
+
+export HOME=/root/qt4
+/bin/arora -qws
+hotplug

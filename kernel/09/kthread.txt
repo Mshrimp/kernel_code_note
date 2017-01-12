@@ -1,0 +1,21 @@
+
+
+创建内核线程:
+	struct task_struct *kthread_create(int (*threadfn)(void *data),
+			void *data, const char namefmt[]);
+	
+唤醒内核线程(可以唤醒所有进程(线程)):
+	wake_up_process(struct task_struct *k);
+
+创建并运行内核线程:
+	struct task_struct *kthread_run(int (*threadfn)(void *data),
+			void *data, const char namefmt[]);
+
+通知内核线程停止:
+	int kthread_stop(struct task_struct *k);
+	返回threadfn函数的返回值, 如果k没有被wake_up_process(k)过将返回-EINTR
+	不是强制停止, 如果内核线程不停止将一直等待
+
+检查是否收到停止信号:
+	int kthread_should_stop(void);
+

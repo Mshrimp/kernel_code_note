@@ -1,0 +1,104 @@
+内核内存管理
+
+page = alloc_pages(GFP_KERNEL, get_order(1234));
+分配失败返回NULL
+
+GFP_KERNEL  ---> 分配标志,当没有足够内存分配时,睡眠阻塞,直到有内存分配
+其他常用分配标志 GFP_ATOMIC,不会阻塞,没有足够内存分配时返回错误
+
+分配2的get_order(1234)次方个页框
+
+分配页框,如果分配多个页,分配的多个页在物理地址上是连续的
+
+
+释放连续的页框
+__free_pages(page, get_order(1234));
+
+
+
+unsigned long p;
+p = __get_free_pages(GFP_KERNEL, get_order(1234));
+失败返回0
+成功返回虚拟地址
+
+释放连续的页框
+free_pages(p, get_order(1234));
+
+
+分配内存
+void *p;
+p = kmalloc(1234, GFP_KERNEL);
+一般来说,kmalloc通常用于分配少量内存,保证可移植一般不超过128k
+分配内存:
+在虚拟地址上连续, 在物理地址上也连续
+kzalloc();
+kfree(p);
+
+
+void *p;
+p = vmalloc(0x900000);
+一般来说,vmalloc通常用于分配大量内存,
+分配内存:
+在虚拟地址上连续, 在物理地址上不一定连续
+
+vfree(p);
+
+
+使用高速内存池对象
+struct kmem_cache *kc;
+
+void *p;
+创建对象
+kc = kmem_cache_create("kc", 16, 0, SLAB_HWCACHE_ALIGN, NULL);
+
+分配内存块
+p = kmem_cache_alloc(kc, GFP_KERNEL);
+
+释放内存块
+kmem_cache_free(kc, p);
+
+销毁对象
+kmem_cache_destroy(kc);
+
+
+
+
+##########################################################
+使用永久映射区访问高端内存(物理内存896M以上部分)
+struct page *page
+void *p;
+
+page = alloc_pages(GFP_KERNEL | __GFP_HIGHMEM, get_order(1234));
+p = kmap(page);
+##########################################################
+
+
+void *p;
+p = ioremap(0, SZ_1K)   ---> 把一段物理地址映射到虚拟地址空间
+iounmap(p);             ---> 取消映射
+
+v = ioread32(p);    ---> p:寄存器虚拟地址
+iowrite32(v, p);---> v:要写入的值
+
+v = ioread16(p);
+iowrite16(v, p);
+
+v = ioread8(p);
+iowrite8(v, p);
+
+
+为dma设备分配内存
+virt = dma_alloc_coherent(NULL, 512, &phys, GFP_KERNEL);
+返回2个地址:
+virt    ---> 虚拟地址
+phys    ---> 物理地址
+
+
+释放内存
+dma_free_coherent(NULL, 512, virt, phys);
+传递参数:
+virt    ---> 虚拟地址
+phys    ---> 物理地址
+
+
+

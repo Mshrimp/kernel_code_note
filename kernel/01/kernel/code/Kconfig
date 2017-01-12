@@ -1,0 +1,69 @@
+
+config	TEST_FUNC
+	bool	"test func code"
+	select	TEST_FOO
+	help	
+		"aaaaaaaaaaaaaaaaaaaaaaaa"
+		aaaaaaaaaaaaaaaaaaaaaaaa
+		aaaaaaaaaaaaaaaaaaaaaaaaa
+		aaaaaaaaaaaaaaaaaaaaaaaaa
+
+config	TEST_FOO
+	bool	"test foo code"
+
+config	TEST_AAA
+	bool	"test aaa code"
+	depends on TEST_FUNC
+
+#menu  "Test system"
+menuconfig 	ARCH_FUNC
+	bool	"Test system"
+
+if 	ARCH_FUNC
+
+choice
+	prompt	"select system"
+	default	ARCH_EXYNOS
+
+config	ARCH_EXYNOS
+	bool	"ARCH EXYNOS SEL"
+
+config	ARCH_TI	
+	bool	"ARCH TI SEL"
+
+config	ARCH_X86
+	bool	"ARCH X86 SEL"
+
+config	ARCH_ARM
+	bool	"ARCH ARM SEL"
+
+endchoice
+
+config	VALA	
+	tristate	"VAL A ...."
+
+comment	"THIS IS TEST FUNC VALUE"
+
+config	TEST_A
+	int		"TEST FUNC VALA ..."
+	range 1 100
+
+config	TEST_B
+	int		"TEST FUNC VALB ..."
+	range 10 300
+
+config	TEST_C
+	int		"TEST FUNC VALC ..."
+	range 20 400
+
+config	TEST_ENTRY
+	hex		"THE KERNEL ENTRY ..."
+	range 4000	8000
+
+config	TEST_CMDLINE
+	string	"KERNEL CMDLINE ..."
+
+
+endif
+
+#endmenu

@@ -1,0 +1,10 @@
+[Translation]
+File=QtopiaSettings
+Context=WiFi AP Setting
+Comment[Desktop Entry/Name]=Use soft hyphen (char U00AD) to indicate hyphenation
+[Desktop Entry]
+Exec=wifiap
+Icon=wifiap
+Type=Application
+Name[]=WiFi AP Setting
+CanFastload=0

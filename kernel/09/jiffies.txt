@@ -1,0 +1,15 @@
+
+
+
+系统启动以来的节拍数:
+	unsigned long volatile jiffies;
+
+节拍频率:
+	HZ
+
+比较节拍计数:
+	time_is_before_jiffies(timeout)
+	time_is_after_jiffies(timeout)
+	time_is_before_eq_jiffies(timeout)
+	time_is_after_eq_jiffies(timeout)
+

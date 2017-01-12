@@ -1,0 +1,65 @@
+
+#include <linux/fs.h>
+#include <linux/cdev.h>
+
+MKDEV(int major, int minor);
+
+MAJOR(dev_t);
+MINOR(dev_t);
+
+int register_chrdev_region(dev_t from, unsigned count, const char * name);
+from 	主设备号和次设备号起始值
+count 	请求设备号的个数
+name	设备名，可以随便命名，可根据name在/proc/devices中查询主设备号
+
+
+int alloc_chrdev_region(dev_t * dev, unsigned baseminor, unsigned count, const char * name);
+dev		存放设备号变量的指针
+baseminor	次设备号起始值， baseminor == MINOR(dev)
+count		请求次设备号的个数, 与register_chrdev_region的count不同
+name		设备名
+
+
+
+void unregister_chrdev_region(dev_t from, unsigned count);
+from 	主设备号和次设备号起始值
+count 	注销设备号个数
+
+
+
+struct cdev * cdev_alloc(void);
+
+void cdev_init(struct cdev * cdev, const struct file_operations * fops);
+
+int cdev_add(struct cdev * p, dev_t dev, unsigned count);
+
+void cdev_del(struct cdev * p);
+
+
+
+int __register_chrdev( unsigned int major, unsigned int baseminor, unsigned int count, const char * name, const struct file_operations * fops);
+major		主设备号， 如果主设备号为0将动态分配主设备号
+baseminor	次设备号起始值
+count		请求次设备号的个数
+name		设备名
+fops		file_operations指针
+
+
+void __unregister_chrdev( unsigned int major, unsigned int baseminor, unsigned int count, const char * name);
+major		主设备号， 不能为0， 可通过name在/proc/devices查询得到
+baseminor	次设备号起始值
+count		注销次设备号的个数
+name		设备名
+
+
+void *container_of(ptr, type, member);
+返回值 == (int)ptr - (int)((type*)0)->menber
+
+
+#include <linux/uaccess.h>
+
+unsigned long copy_from_user(void *to, const void __user *from, unsigned long n);
+unsigned long copy_to_user(void __user *to, const void *from, unsigned long n);
+
+
+

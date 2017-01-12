@@ -1,0 +1,10 @@
+[Translation]
+File=QtopiaSettings
+Context=webkit-browser-starter
+Comment[Desktop Entry/Name]=Use soft hyphen (char U00AD) to indicate hyphenation
+[Desktop Entry]
+Exec=webkit-browser-starter
+Icon=webkit-browser-starter
+Type=Application
+Name[]=WebKit浏览器
+CanFastload=0

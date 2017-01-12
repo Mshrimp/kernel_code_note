@@ -1,0 +1,17 @@
+
+
+定义:
+	struct mutex mutex;
+
+初始化:
+	mutex_init(struct mutext *mutex);
+
+加锁:
+	mutex_lock(struct mutext *mutex);
+	mutex_trylock(struct mutext *mutex);
+	mutex_lock_interruptible(struct mutext *mutex);
+
+解锁:
+	mutex_unlock(struct mutext *mutex);
+
+

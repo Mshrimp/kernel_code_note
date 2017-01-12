@@ -1,0 +1,1 @@
+cmd_/nfsroot_mini/kernel/teacher/mm/10_ioremap_bell/test.ko := arm-linux-ld -EL -r  -T /home/xiami/note/FriendlyARM/Linux/linux-3.5/scripts/module-common.lds --build-id  -o /nfsroot_mini/kernel/teacher/mm/10_ioremap_bell/test.ko /nfsroot_mini/kernel/teacher/mm/10_ioremap_bell/test.o /nfsroot_mini/kernel/teacher/mm/10_ioremap_bell/test.mod.o

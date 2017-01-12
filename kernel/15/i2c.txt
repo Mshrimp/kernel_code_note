@@ -1,0 +1,140 @@
+linux-3.5/include/linux/i2c.h 
+1. i2c核心层
+
+总线实现,及总线接口的实现(i2c-boardinfo.c, i2c-core.c)
+
+module_init();
+#define postcore_initcall(fn)       __define_initcall("2",fn,2)
+
+
+2. 总线驱动
+i2c适配器驱动(linux-3.5/drivers/i2c/busses/i2c-s3c2410.c)
+
+i2c适配器结构
+struct i2c_adapter adapter
+int nr; ---> 总线号
+const struct i2c_algorithm *algo;   总线传输函数
+
+动态分配总线号
+int i2c_add_adapter(struct i2c_adapter *adapter);
+静态指定总线号
+int i2c_add_numbered_adapter(struct i2c_adapter *adap);
+
+追踪该函数定义  --->    i2c_register_adapter()  --->
+i2c_scan_static_board_info()    --->
+	__i2c_board_list
+
+i2c_new_device();
+	i2c_client
+
+
+3. 设备驱动
+i2c总线上从设备驱动
+
+i2c总线上设备
+struct i2c_client client;
+
+struct i2c_client {
+	unsigned short flags;		/* div., see below		*/
+	unsigned short addr;		/* chip address - NOTE: 7bit	*/
+					/* addresses are stored in the	*/
+					/* _LOWER_ 7 bits		*/
+	char name[I2C_NAME_SIZE];
+	struct i2c_adapter *adapter;	/* the adapter we sit on	*/
+	struct i2c_driver *driver;	/* and our access routines	*/
+	struct device dev;		/* the device structure		*/
+	int irq;			/* irq issued by device		*/
+	struct list_head detected;
+};
+
+i2c_new_device();
+
+1. 添加设备信息
+linux-3.5/drivers/i2c/i2c-boardinfo.c
+
+LIST_HEAD(__i2c_board_list);
+EXPORT_SYMBOL_GPL(__i2c_board_list);
+
+struct i2c_board_info {
+	char		type[I2C_NAME_SIZE];    ---> 初始化struct i2c_client结构name成员
+	unsigned short	flags;
+	unsigned short	addr;       ---> 初始化struct i2c_client结构addr成员
+	void		*platform_data;
+	struct dev_archdata	*archdata;
+	struct device_node *of_node;
+	int		irq;
+};
+
+i2c_register_board_info();
+
+
+2. 注册设备驱动
+i2c总线上驱动
+struct i2c_driver driver
+i2c_add_driver(&driver);
+i2c_del_driver(&driver);
+
+
+
+======================================================
+at24c08驱动
+
+
+1>. 添加设备信息
+在板级文件（linux-3.5/arch/arm/mach-exynos/mach-tiny4412.c）中添加以下代码：
+
+
+需要包含的头文件:
+#include <linux/i2c/at24.h> //add for eeprom by lzc
+
+1.添加IIC设备信息
+
+在文件开始位置添加结构体定义:
+
+/* add for eeprom by lzc*/
+static struct at24_platform_data at24c08 = { 
+	.byte_len = SZ_8K / 8,
+	.page_size = 16, 
+};
+
+
+向该结构体数组添加元素(//by lzc, add for eeprom及以下5行)
+static struct i2c_board_info smdk4x12_i2c_devs0[] __initdata = {
+#ifdef CONFIG_SND_SOC_WM8960_TINY4412
+	{
+		I2C_BOARD_INFO("wm8960", 0x1a),
+		.platform_data = &wm8960_pdata,
+	},
+#endif
+
+//by lzc, add for eeprom
+	{ 
+		I2C_BOARD_INFO("at24c08", 0x50),//"at24c08"
+		.platform_data = &at24c08, //不可少的
+
+	},
+
+#if 0
+#ifdef CONFIG_REGULATOR_S5M8767
+	{
+		I2C_BOARD_INFO("s5m87xx", 0xCC >> 1),
+		.platform_data	= &exynos4_s5m8767_pdata,
+		.irq		= IRQ_EINT(26),
+	},
+#endif
+
+2>. 驱动注册
+
+struct i2c_driver driver
+
+i2c_add_driver(&driver);
+i2c_del_driver(&driver);
+
+
+i2c核心层提供的传输数据接口
+i2c_transfer();
+
+i2c_master_send();
+i2c_master_recv();
+
+

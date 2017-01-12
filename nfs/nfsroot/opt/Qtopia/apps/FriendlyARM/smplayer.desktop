@@ -1,0 +1,10 @@
+[Translation]
+File=QtopiaSettings
+Context=SMPlayer
+Comment[Desktop Entry/Name]=SMPlayer
+[Desktop Entry]
+Exec=smplayer
+Icon=smplayer
+Type=Application
+Name[]=SMPlayer
+CanFastload=0

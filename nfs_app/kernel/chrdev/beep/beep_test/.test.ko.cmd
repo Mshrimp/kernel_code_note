@@ -1,0 +1,1 @@
+cmd_/nfsroot_mini/kernel/chrdev/key/beep_test/test.ko := arm-linux-ld -EL -r  -T /home/xiami/note/FriendlyARM/Linux/linux-3.5/scripts/module-common.lds --build-id  -o /nfsroot_mini/kernel/chrdev/key/beep_test/test.ko /nfsroot_mini/kernel/chrdev/key/beep_test/test.o /nfsroot_mini/kernel/chrdev/key/beep_test/test.mod.o

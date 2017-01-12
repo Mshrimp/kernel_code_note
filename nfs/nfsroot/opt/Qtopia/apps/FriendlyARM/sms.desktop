@@ -1,0 +1,10 @@
+[Translation]
+File=QtopiaSettings
+Context=SMS
+Comment[Desktop Entry/Name]=Use soft hyphen (char U00AD) to indicate hyphenation
+[Desktop Entry]
+Exec=sms
+Icon=sms
+Type=Application
+Name[]=GPRS短信
+CanFastload=0

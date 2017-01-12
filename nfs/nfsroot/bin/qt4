@@ -1,0 +1,8 @@
+#!/bin/sh
+
+. setqt4env
+
+export HOME=/root
+cd /usr/local/Trolltech/QtEmbedded-4.8.5-arm/demos/embedded/fluidlauncher
+./fluidlauncher -qws
+hotplug

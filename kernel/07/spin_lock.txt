@@ -1,0 +1,42 @@
+
+#include <linux/spinlock.h>
+
+定义自旋锁
+spinlock_t lock;
+
+初始化自旋锁
+void spin_lock_init(spinlock_t *lock);
+
+获取自旋锁
+void spin_lock(spinlock_t *lock);
+int spin_trylock(spinlock_t *lock);  返回非0成功获取锁
+
+不可抢占内核: 两个函数都是空操作
+单CPU可抢占:  两个函数都是禁止当前进程被抢占
+多CPU:        spin_lock:    禁止抢占, 获取锁, 如果不能获取锁将一直循环
+		      spin_trylock: 禁止抢占, 获取锁, 如果不能获取锁马上返回
+
+释放自旋锁
+void spin_unlock(spinlock_t *lock);
+
+
+
+
+
+
+
+
+
+
+
+
+
+void spin_lock_irq(spinlock_t *lock);
+void spin_lock_irqsave(spinlock_t *lock, unsigned long flags);
+void spin_lock_bh(spinlock_t *lock);
+
+void spin_unlock_irq(spinlock_t *lock);
+void spin_unlock_irqrestore(spinlock_t *lock, unsigned long flags);
+void spin_unlock_bh(spinlock_t *lock);
+
+

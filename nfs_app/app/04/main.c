@@ -1,0 +1,10 @@
+#include <stdio.h>
+
+static int func(void)
+{}
+
+int main(void)
+{
+	printf("hello world\n");
+	return 0;
+}

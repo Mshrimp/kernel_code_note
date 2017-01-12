@@ -1,0 +1,516 @@
+
+. bootloader和kernel:
+	bootloader
+	kernel 
+
+. 什么是kernel??
+	管理计算机的硬件和软件资源, 提供接口给用户访问;
+
+. linux框架
+	文件系统管理
+	设备驱动管理
+	进程管理
+	内存管理
+	网络协议栈
+
+. linux版本信息:
+	http://kernel.org/
+
+	linux-3.5
+		  ^	^
+	3.5.0-FriendlyARM
+	2.6.18-194.el5PAE
+	^ 
+	主版本号
+	  ^
+	  次版本号	(偶数是稳定版本)
+		^
+		扩展版本号
+		  ^
+		  发行版本号
+			
+	linux-3.X.tar.gz
+	patch-3.x.gz		补丁;
+
+. 补丁使用
+	gzip -cd ../patch-3.x.gz | patch -p1
+
+	diff -Nur xxx1/ xxx2/ > patch-xxx2
+
+	linux-2.6
+	patch-2.7
+
+	linux-2.6.27
+	patch-2.6.28
+
+. linux源码目录结构: 
+	.
+	|-- COPYING				
+	|-- CREDITS				
+	|-- Documentation		帮助文档
+		00-INDEX
+		arm/	
+			Booting
+			Interrupts
+			Setup
+			memory.txt
+		fb/					framebuffer
+			...
+		zh_CN/				中文帮助
+			CodingStyle
+			...
+
+	|-- Kbuild				编译使用
+	|-- Kconfig				编译使用
+	|-- MAINTAINERS			kernel changes
+	|-- Makefile			编译
+	|-- Module.symvers		...
+	|-- README				
+	|-- REPORTING-BUGS
+	|-- System.map			静态符号表文件
+	|-- arch				架构相关代码
+		arm/
+			boot/	
+				Image		没压缩的内核
+				zImage		压缩后的内核
+				compressed/	
+					head.S	zImage启动代码
+			kernel/
+				head.S		Image启动代码
+					stext	内核入口函数
+			mach-exynos/	soc 代码
+				mach-tiny4412.c	板子相关代码
+
+	|-- block				块设备调度算法
+			
+	|-- crypto				加密压缩算法
+		md4.c
+		md5.c
+		crc32c.c
+		compress.c
+
+	|-- drivers				驱动代码内核中代码最多的目录
+		char/
+			tiny4412_adc.c
+			tiny4412_backlight.c
+			tiny4412_buttons.c
+			tiny4412_hello_module.c
+			tiny4412_leds.c
+			tiny4412_pwm.c
+		input/
+			keyboard/
+			mouse/
+			joystick/
+			touchscreen/
+				tiny4412_1wire_host.c
+				ft5x06_ts.c
+		hwmon/
+			mma7660.c
+		video/
+			s3c-fb.c
+		i2c/
+		block/
+		bluetooth/
+							
+	|-- firmware			固件代码不开源.S
+		firmware/	
+
+	|-- fs					文件系统支持
+		ext2
+		ext3
+		ext4
+		fat 
+		nfs
+		ntfs
+		cramfs
+		yaffs2
+
+	|-- include				头文件;
+		include/linux
+
+	|-- init									
+		main.c				第一个c 代码
+			start_kernel	第一个c 函数
+
+	|-- ipc					进程间通讯
+		msg.c
+		sem.c
+		shm.c
+
+	|-- kernel				内核核心代码, 进程管理
+		fork.c
+		exit.c
+		wait.c
+		workqueue.c
+		signal.c
+		ksysfs.c
+		cpu.c
+		sched/
+
+	|-- lib					内核库代码			
+		vsprintf.c			
+		llist.c
+		decompress.c
+		crc8.c
+		kobject.c
+		string.c
+
+	|-- mm					内存管理
+		page_alloc.c
+		mmap.c
+		memory.c
+		vmalloc.c
+		ksm.c
+		slub.c
+
+	|-- modules.builtin		编译
+	|-- modules.order		...
+
+	|-- net					网络协议栈
+		ipv4/
+		ipv6/
+		8021q/
+		bluetooth/
+		nfc/
+
+	|-- samples				实例	
+
+	|-- scripts				编译相关脚本
+		Makefile.build
+		Makefile.clean
+		Makefile.lib
+		Makefile.*
+
+	|-- security			安全子系统
+		selinux/
+
+	|-- sound				声音相关代码
+		....
+
+	|-- tags				
+	|-- tiny4412_android_defconfig		默认配置文件
+	|-- tiny4412_linux_defconfig		...
+	|-- tiny4412_ubuntu_defconfig		...
+	|-- tools				工具
+
+	|-- usr					用户相关代码
+		initramfs_data.cpio	根文件系统
+
+	|-- virt				虚拟化实现
+
+	|-- vmlinux				有elf头内核文件
+	`-- vmlinux.o			链接前内核目标文件
+
+	21 directories, 18 files
+
+. 内核代码编译
+	1)配置;
+		1.那些文件需要编译;				obj-y
+		2.那些文件中那些部分需要编译;	#ifdef	#endif
+
+	make menuconfig
+		生成.config
+
+	make 
+	scripts/kconfig/conf --silentoldconfig Kconfig
+		生成:
+			include/generated/autoconf.h
+			include/config/auto.conf
+
+	. 内核makefile结构:	
+	The Makefiles have five parts:
+
+		Makefile        the top Makefile.
+		.config         the kernel configuration file.
+		arch/$(ARCH)/Makefile   the arch Makefile.
+		scripts/Makefile.*  common rules etc. for all kbuild Makefiles.
+		kbuild Makefiles    there are about 500 of these.
+
+	Makefile        the top Makefile.
+	Makefile:
+		all: vmlinux
+
+	vmlinux: scripts/link-vmlinux.sh $(vmlinux-deps) FORCE
+	ifdef CONFIG_HEADERS_CHECK
+		$(Q)$(MAKE) -f $(srctree)/Makefile headers_check
+	endif
+	ifdef CONFIG_SAMPLES
+		$(Q)$(MAKE) $(build)=samples
+	endif
+	ifdef CONFIG_BUILD_DOCSRC
+		$(Q)$(MAKE) $(build)=Documentation
+	endif
+		+$(call if_changed,link-vmlinux)
+	
+	vmlinux-deps := $(KBUILD_LDS) $(KBUILD_VMLINUX_INIT) $(KBUILD_VMLINUX_MAIN)
+
+	export KBUILD_VMLINUX_INIT := $(head-y) $(init-y)
+	export KBUILD_VMLINUX_MAIN := $(core-y) $(libs-y) $(drivers-y) $(net-y)
+	export KBUILD_LDS          := arch/$(SRCARCH)/kernel/vmlinux.lds
+	
+	
+	arch/$(ARCH)/Makefile   the arch Makefile.
+		head-y      := arch/arm/kernel/head$(MMUEXT).o
+	
+		core-y      += arch/arm/kernel/ arch/arm/mm/ arch/arm/common/
+		core-y      += arch/arm/net/
+		core-y      += $(machdirs) $(platdirs)
+		drivers-$(CONFIG_OPROFILE)      += arch/arm/oprofile/
+		libs-y              := arch/arm/lib/ $(libs-y)
+
+	
+	init-y      := $(patsubst %/, %/built-in.o, $(init-y))
+	core-y      := $(patsubst %/, %/built-in.o, $(core-y))
+	drivers-y   := $(patsubst %/, %/built-in.o, $(drivers-y))
+	net-y       := $(patsubst %/, %/built-in.o, $(net-y))
+	libs-y1     := $(patsubst %/, %/lib.a, $(libs-y))
+	libs-y2     := $(patsubst %/, %/built-in.o, $(libs-y))
+	libs-y      := $(libs-y1) $(libs-y2)
+	
+	init-y      := init/
+	drivers-y   := drivers/ sound/ firmware/
+	net-y       := net/
+	libs-y      := lib/
+	core-y      := usr/
+	core-y      += kernel/ mm/ fs/ ipc/ security/ crypto/ block/	
+
+	
+	obj-y	builtin-target
+	*/.o -> */built-in.o 
+	
+	*/../built-in.o 	
+
+	*/built-in.o */built-in.o */built-in.o */built-in.o
+
+	/vmlinux.o	
+
+	LD -> vmlinux -> Image -> zImage
+ 
+. 添加自己的代码到内核:
+	cd drivers/
+	mkdir test
+	vim Makefile
+		obj-y	+= test/
+
+	cd test/
+		vim func.c
+		vim Makefile
+			obj-y	+= func.o
+
+. 针对自己的代码添加配置选项:
+	mconf
+	conf
+
+	vim drivers/Kconfig
+		source "drivers/test/Kconfig"
+	
+	vim drivers/test/Kconfig
+		config  TEST_FUNC
+		    bool    "test func ............."
+
+		CONFIG_TEST_FUNC=y		选中;
+
+. Kconfig语法:
+	mainmenu: 主菜单
+	menu/endmenu	: 菜单;
+	config	: 选项;
+	choice/endchoice : 单选;
+	source	: include
+	default	: 默认值
+	select	: 选中;
+	
+	prompt	: 提示符
+	help	: 帮助
+	depends on : 依赖
+
+	bool	: 2选1	y/n
+	tristate: 3选1	y/n/m
+		CONFIG_MODULES
+	int 	: 10进制输入
+	hex		: 16进制输入
+	string	: 字符串输入
+	range	: 指定数据范围;
+					
+	comment	: 分割信息;
+
+. 内核裁减和移植
+	裁减: make menuconfig
+	移植: arm-linux-gcc
+		  mach-tiny4412.c
+			+ 驱动;
+	
+homework:	
+. 补丁
+. 添加自己代码到内核
+. 添加自己选项到内核
+
+. 模块(插入, 拔出内核)
+	设备驱动	
+	.ko
+	
+	lsmod	(显示当前系统的模块)
+	insmod	(动态插入模块)
+	rmmod	(动态拔出模块)
+	
+. 模块编译:
+	make modules	(只编译系统的模块)
+	make M=drivers/test/ modules	(只编译指定目录的模块)
+	make M=drivers/test/ clean		(只清除指定目录的模块)
+		
+. 模块分离及其Makefile变形;
+	...
+
+. 动态符号表
+	cat /proc/kallsyms | grep test_func
+
+. 模块安装和使用
+	make -C $(KERNEL_DIR) M=`pwd` modules_install INSTALL_MOD_PATH=$(ROOTFS)
+
+	depmod				(建立模块依赖关系)
+	modprobe func		(插入模块)
+	modprobe -r func	(拔出模块)
+
+. 模块入口和出口
+	init_module();		insmod		模块默认入口
+	cleanup_module();	rmmod		模块默认出口
+
+	module_init(func_init);		自定义模块入口
+	moduel_exit(func_exit);		自定义模块出口
+
+. 多模块编译
+	obj-m	+= func.o
+	obj-m 	+= test.o
+
+	func.ko
+	test.ko
+
+. 多文件模块编译
+	obj-m		+= mod.o
+	mod-objs 	+= test.o func.o
+
+. 模块语句宏
+	modinfo *.ko	查看模块信息	
+	
+	MODULE_LICENSE("GPL");						(公共许可)
+	MODULE_AUTHOR("xuwei www.uplooking.com");
+	MODULE_VERSION("1.0");
+
+. 参考书籍:
+	<linux内核设计与实现>	V
+	<设备驱动>	**			V
+	<深入理解linux内核>		V
+
+. 模块间依赖:
+	test -> func (print)
+
+. 作用域(命名空间):
+	模块有作用域
+	内核有作用域
+	全局作用域
+	
+	模块A -X-> 模块B
+	模块A -X-> kernel
+	kernel-X-> 模块A
+
+	insmod xxx.ko
+		   struct module __this_module = {
+		   		.init
+				.exit
+
+. 导出符号:
+	EXPORT_SYMBOL(print);
+
+. lsmod
+	/ # lsmod 
+	test 739 0 - Live 0xbf018000 (O)
+	func 633 1 test, Live 0xbf014000 (O)
+			 ^
+			 引用计数
+			 0 rmmod
+	
+. printk
+	#define KERN_EMERG  "<0>"   /* system is unusable           */
+	#define KERN_ALERT  "<1>"   /* action must be taken immediately */
+	#define KERN_CRIT   "<2>"   /* critical conditions          */
+	#define KERN_ERR    "<3>"   /* error conditions         */
+	#define KERN_WARNING    "<4>"   /* warning conditions           */
+	#define KERN_NOTICE "<5>"   /* normal but significant condition */
+	#define KERN_INFO   "<6>"   /* informational            */
+	#define KERN_DEBUG  "<7>"   /* debug-level messages         */
+	
+	linux-3.5/kernel/printk.c
+	#define DEFAULT_CONSOLE_LOGLEVEL 7 /* anything MORE serious than KERN_DEBUG */
+
+. 添加系统调用:
+	系统调用:
+	main -> open -> kernel -> sys_open
+			swi  -> svc 
+			swi #?
+				 -> 0xffff0008
+				 -> b do_swi
+				 -> ? -> 5 : open
+				 	r0 r1 r2 
+	
+	linux-3.5/arch/arm/kernel/calls.S	(系统调用函数列表)
+		
+. 返回值和错误码
+	errno	<- kernel
+	-1 
+	
+	EBADF	
+	EBUSY
+	EFAULT
+	ENOMEM
+	...
+
+. 一切皆文件
+. 设备分类
+	字符设备	c
+		1)io要求实时性的;
+		2)字符方式访问;
+
+	块设备		b
+		1)io要求缓冲访问(非实时性)
+		2)块为单位访问;
+
+	网络设备
+		socket
+
+. 字符设备框架
+
+. 字符设备驱动
+	SYSCALL_DEFINEx(open, 
+				  ^
+				  参数个数
+	SYSCALL_DEFINE
+
+	struct file_operations fops;
+
+	ret = register_chrdev(major, name, &fops);
+	major : 主设备;
+	name  : 设备名;
+	fops  : 操作集合;
+
+	unregister_chrdev(major, name);
+	major : 主设备;
+	name  : 设备名;
+
+. sys_read
+  sys_write
+
+
+
+
+
+
+
+
+
+	
+	
+
+
+
+	
+
+

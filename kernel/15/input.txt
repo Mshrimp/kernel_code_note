@@ -1,0 +1,85 @@
+include/linux/input.h
+
+
+描述一个输入事件
+/*
+ * The event structure itself
+ */
+
+struct input_event {
+	struct timeval time;
+	__u16 type;
+	__u16 code;
+	__s32 value;
+};
+
+
+struct input_dev *dev;
+
+dev = input_allocate_device();
+填充dev结构
+	set_bit(EV_SYN, dev->evbit);
+	set_bit(EV_ABS, dev->evbit);
+	set_bit(EV_KEY, dev->evbit);
+
+	set_bit(KEY_ESC, dev->keybit)
+
+	input_set_capability(dev, EV_KEY, KEY_ESC)
+	
+	set_bit(ABS_MT_TRACKING_ID, dev->absbit)
+	set_bit(ABS_MT_TOUCH_MAJOR, dev->absbit)
+	set_bit(ABS_MT_WIDTH_MAJOR, dev->absbit)
+	set_bit(ABS_MT_POSITION_X, dev->absbit)
+	set_bit(ABS_MT_POSITION_Y, dev->absbit)
+	
+	input_set_abs_params(input_dev, ABS_MT_POSITION_X, 0, ts->screen_max_x, 0, 0);
+	input_set_abs_params(input_dev, ABS_MT_POSITION_Y, 0, ts->screen_max_y, 0, 0);
+	input_set_abs_params(input_dev, ABS_MT_TOUCH_MAJOR, 0, ts->pressure_max,0, 0);
+	input_set_abs_params(input_dev, ABS_MT_WIDTH_MAJOR, 0, 200, 0, 0);
+	input_set_abs_params(input_dev, ABS_MT_TRACKING_ID, 0, FT5X0X_PT_MAX, 0, 0);
+	
+	set_bit(ABS_X, input_dev->absbit);
+	set_bit(ABS_Y, input_dev->absbit);
+	set_bit(ABS_PRESSURE, input_dev->absbit);
+
+	set_bit(BTN_TOUCH, input_dev->keybit);
+
+	input_set_abs_params(input_dev, ABS_X, 0, ts->screen_max_x, 0, 0);
+	input_set_abs_params(input_dev, ABS_Y, 0, ts->screen_max_y, 0, 0);
+	input_set_abs_params(input_dev, ABS_PRESSURE, 0, ts->pressure_max, 0 , 0);
+
+input_register_device(dev);
+
+input_unregister_device(dev);
+input_free_device(dev);
+
+#ifdef CONFIG_FT5X0X_MULTITOUCH
+
+	input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
+	input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
+
+	input_report_abs(ts->input_dev, ABS_MT_PRESSURE, event->pressure);
+	input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, event->pressure);
+	input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, i);
+
+	input_mt_sync(ts->input_dev);
+
+#else
+
+	input_report_abs(ts->input_dev, ABS_X, x);
+	input_report_abs(ts->input_dev, ABS_Y, y);
+	input_report_abs(ts->input_dev, ABS_PRESSURE, event->pressure);
+
+	input_report_key(ts->input_dev, BTN_TOUCH, 1);
+#endif
+
+	input_sync(ts->input_dev);
+
+关闭某一个中断
+disable_irq(irq_num);
+disable_irq_nosync(irq_num);    ---> 在中断上下文关闭某个中断,不会阻塞
+
+开启某一个中断
+enable_irq(irq_num);
+
+

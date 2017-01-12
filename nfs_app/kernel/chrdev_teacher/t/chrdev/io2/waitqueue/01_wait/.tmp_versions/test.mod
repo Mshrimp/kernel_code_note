@@ -1,0 +1,2 @@
+/nfsroot_mini/kernel/chrdev_teacher/t/chrdev/io2/waitqueue/01_wait/test.ko
+/nfsroot_mini/kernel/chrdev_teacher/t/chrdev/io2/waitqueue/01_wait/test.o

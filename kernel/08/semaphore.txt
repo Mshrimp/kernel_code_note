@@ -1,0 +1,46 @@
+
+#include <linux/semaphore.h>
+
+struct semaphore {
+	raw_spinlock_t          lock;
+	unsigned int            count;
+	struct list_head        wait_list;
+};
+
+定义:
+	struct semaphore sem;
+
+初始化:
+	void sema_init(struct semaphore *sem, int val);  //val为count的初始值
+
+	#define init_MUTEX(sem) sema_init(sem, 1)
+	#define init_MUTEX_LOCKED(sem) sema_init(sem, 0)
+
+定义并初始化:
+	DECLARE_MUTEX(sem);  //count的初始值为1
+
+
+锁定信号量:
+	void down(struct semaphore *sem);
+
+	int down_interruptible(struct semaphore *sem);
+	返回非0值表示被信号(不是被UP)唤醒, if(down_interruptible(&sem) return -ERESTARTSYS;
+	
+	int down_trylock(struct semaphore *sem);
+	返回非0表示没有获取锁
+
+	if(count的值大于0)
+		将count减1后立即返回
+	else
+		进入睡眠, down_trylock不会进入睡眠
+
+释放信号量:
+	void up(struct semaphore *sem);
+
+	count的值加1
+
+	if(有进程等待该信号量)
+		唤醒第一个等待该信号量的进程
+
+
+

@@ -1,0 +1,1 @@
+cmd_/nfsroot_mini/kernel/lock/03/test.ko := arm-linux-ld -EL -r  -T /home/xiami/note/FriendlyARM/Linux/linux-3.5/scripts/module-common.lds --build-id  -o /nfsroot_mini/kernel/lock/03/test.ko /nfsroot_mini/kernel/lock/03/test.o /nfsroot_mini/kernel/lock/03/test.mod.o

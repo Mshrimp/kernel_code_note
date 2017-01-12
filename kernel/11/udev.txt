@@ -1,0 +1,25 @@
+
+tar xf udev-096.tar.bz2
+
+vim Makefile
+	prefix = /nfsroot
+	CROSS_COMPILE = arm-linux-
+
+make
+make install
+
+echo "/sbin/mdev" > /proc/sys/kernel/hotplug
+mdev -s
+
+udevd -d
+udevstart
+
+udevmonitor &
+
+vim etc/udev/rules.d/test.rules
+KERNEL=="wdt",NAME="wdt-dev"
+
+udevcontrol reload_rules
+
+
+

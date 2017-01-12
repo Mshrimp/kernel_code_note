@@ -1,0 +1,57 @@
+
+#include <linux/interrupt.h>
+
+int request_irq(unsigned int irq, irq_handler_t handler, 
+		unsigned long irqflags, const char *devname, void *dev_id)
+
+	irq:
+		中断号 arch/arm/plat-s3c64xx/include/plat/irqs.h
+
+	handler:
+		中断处理函数 irqreturn_t handler(int irq, void *dev_id);
+		irqreturn_t:
+			See include/linux/irqreturn.h
+
+	irqflags:
+		See line 21-59 in include/linux/interrupt.h
+		使用IRQF_SHARED共享irq时, irqflags必须相同
+		如:  	request_irq(IRQ_EINT(0), handler1, 
+				IRQF_TRIGGER_FALLING | IRQF_SHARED, "dev1", &dev1);
+
+			request_irq(IRQ_EINT(0), handler2, 
+				IRQF_TRIGGER_FALLING | IRQF_SHARED, "dev2", &dev2);
+
+	devname:
+		设备名, cat /proc/interrupts
+
+	dev_id:
+		发生中断时将dev_id传递给handler函数,
+	       	irqflags含有IRQF_SHARED时dev_id不能为NULL, 并且要保证唯一
+		dev_id一般采用当前设备的结构体指针
+
+
+void free_irq (	unsigned int irq, void * dev_id);
+	释放匹配irq和dev_id的中断, 如果irq有多个相同的dev_id, 将释放第一个
+	So, 共享中断的dev_id不是唯一时, 可能会释放到其它设备的中断
+
+
+void disable_irq(unsigned int irq);
+	关闭irq号中断	
+
+void enable_irq(unsigned int irq);
+	开启irq号中断	
+
+void local_irq_save(unsigned long flags);
+	关闭当前CPU中断并保存当前状态到flags
+
+void local_irq_restore(unsigned long flags);
+	恢复flags到当前CPU
+
+void local_irq_disable(void);
+	关闭当前CPU中断
+
+void local_irq_enable(void);
+	开启当前CPU中断
+
+注: 没有关闭和开启所有CPU中断的函数(没必要)
+

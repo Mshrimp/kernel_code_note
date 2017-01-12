@@ -1,0 +1,18 @@
+
+#include <linux/gpio.h>
+
+gpio ==> S3C64XX_GPx(n)
+		 EXYNOS4X12_GPM4(n)
+
+int gpio_request(gpio, "name");
+void gpio_free(gpio);
+
+int gpio_direction_output(gpio, dat);
+int gpio_direction_input(gpio);
+
+int s3c_gpio_cfgpin(gpio, S3C_GPIO_SFN(con));
+
+void gpio_set_value(gpio, dat);
+int gpio_get_value(gpio);
+
+
